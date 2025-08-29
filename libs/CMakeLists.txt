@@ -12,8 +12,8 @@ if(NOT TARGET glfw)
 endif()
 
 if(NOT TARGET glad)
-    add_library(glad INTERFACE)
-    target_include_directories(glad INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/glad/include)
+    add_library(glad STATIC ${CMAKE_CURRENT_SOURCE_DIR}/glad/src/gl.c)
+    target_include_directories(glad PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/glad/include)
 endif()
 
 if(NOT TARGET glm)
