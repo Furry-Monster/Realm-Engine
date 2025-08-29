@@ -57,6 +57,8 @@ int main(int argc, const char **argv) {
   glfwSetWindowSizeCallback(g_window, windowSizeCallback);
   glfwSetFramebufferSizeCallback(g_window, framebufferSizeCallback);
 
+  glfwMakeContextCurrent(g_window);
+
   // init glad
   if (!gladLoadGL(glfwGetProcAddress)) {
     glfwDestroyWindow(g_window);
@@ -67,8 +69,14 @@ int main(int argc, const char **argv) {
 
   // main loop
   while (!g_info.shouldClose && !glfwWindowShouldClose(g_window)) {
+    // event handler...
     glfwPollEvents();
+
+    // rendering...
+    glClearColor(1, 1, 1, 1);
     glClear(GL_COLOR_BUFFER_BIT);
+
+    // buffering...
     glfwSwapBuffers(g_window);
   }
 
