@@ -24,20 +24,16 @@
 #define glUnbindVertexArray() (glBindVertexArray(0))
 
 static unsigned int g_indices[] = {
-    0, 1, 2, // 第一个三角形
+    0, 1, 3, // 第一个三角形
+    1, 2, 3  // 第二个三角形
 };
 
 static float g_vertices[] = {
-    // 位置              // 颜色
-    0.5f,  -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, // 右下
-    -0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, // 左下
-    0.0f,  0.5f,  0.0f, 0.0f, 0.0f, 1.0f  // 顶部
-};
-
-static float g_texCoords[] = {
-    0.0f, 0.0f, // 左下角
-    1.0f, 0.0f, // 右下角
-    0.5f, 1.0f  // 上中
+    //     ---- 位置 ----       ---- 颜色 ----     - 纹理坐标 -
+    0.5f,  0.5f,  0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, // 右上
+    0.5f,  -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, // 右下
+    -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, // 左下
+    -0.5f, 0.5f,  0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f  // 左上
 };
 
 static struct GLInfo {
@@ -189,7 +185,7 @@ static GLuint loadAndLinkShader(char *vert_path = nullptr,
   return shader_prog;
 }
 
-static GLuint loadTexture(char *tex_path = nullptr) {
+static GLuint loadTexture(char *tex_path = nullptr, int load_mode = GL_RGB) {
   GLuint texture{0};
   glGenTextures(1, &texture);
   glBindTexture(GL_TEXTURE_2D, texture);
@@ -203,7 +199,12 @@ static GLuint loadTexture(char *tex_path = nullptr) {
       cStringIsNullOrEmpty(tex_path) ? "../assets/texture/brick_wall.png"
                                      : tex_path,
       &tex_width, &tex_height, &tex_channels, 0);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, tex_width, tex_height, 0, GL_RGB,
+  if (!tex_data) {
+    std::cerr << "Failed to load texture..." << std::endl;
+    return 0;
+  }
+
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, tex_width, tex_height, 0, load_mode,
                GL_UNSIGNED_BYTE, tex_data);
   glGenerateMipmap(GL_TEXTURE_2D);
   stbi_image_free(tex_data);
@@ -225,12 +226,15 @@ inline static void triangleConfigure(GLuint &vao, GLuint &vbo, GLuint &ebo) {
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(g_indices), g_indices,
                GL_STATIC_DRAW);
 
-  glVertexAttribPointer(0u, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 6,
+  glVertexAttribPointer(0u, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 8,
                         (void *)0);
-  glEnableVertexAttribArray(0);
-  glVertexAttribPointer(1u, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 6,
+  glEnableVertexAttribArray(0u);
+  glVertexAttribPointer(1u, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 8,
                         (void *)(3 * sizeof(float)));
-  glEnableVertexAttribArray(1);
+  glEnableVertexAttribArray(1u);
+  glVertexAttribPointer(2u, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 8,
+                        (void *)(6 * sizeof(float)));
+  glEnableVertexAttribArray(2u);
 
   glUnbindVertexArray();
 }
@@ -281,10 +285,19 @@ int main(int argc, const char **argv) {
   triangleConfigure(vao, vbo, ebo);
 
   // load texture
-  GLuint texture = loadTexture();
+  GLuint texture0 =
+      loadTexture((char *)"../assets/texture/brick_wall.png", GL_RGB);
+  GLuint texture1 =
+      loadTexture((char *)"../assets/texture/smile_face.png", GL_RGBA);
 
-  // use config
+  // use follwing states
   glUseProgram(shader_prog);
+  glActiveTexture(GL_TEXTURE0);
+  glBindTexture(GL_TEXTURE_2D, texture0);
+  glActiveTexture(GL_TEXTURE1);
+  glBindTexture(GL_TEXTURE_2D, texture1);
+  glUniform1i(glGetUniformLocation(shader_prog, "tex0"), 0);
+  glUniform1i(glGetUniformLocation(shader_prog, "tex1"), 1);
   glBindVertexArray(vao);
 
   // main loop
@@ -300,15 +313,16 @@ int main(int argc, const char **argv) {
     glfwPollEvents();
 
     // rendering...
+    // background
     float cur_time = glfwGetTime();
     float green_val = std::sin(cur_time) / 2.0f + 0.5f;
     glClearColor(0.2, green_val, 1, 1);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    // glDrawArrays(GL_TRIANGLES, 0, 3);
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    // triangle
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void *)0);
 
+    // ui
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
@@ -319,8 +333,11 @@ int main(int argc, const char **argv) {
   glUnbindVertexArray();
 
   // clean assets
+  glDeleteTextures(1, &texture0);
+  glDeleteTextures(1, &texture1);
   glDeleteVertexArrays(1, &vao);
   glDeleteBuffers(1, &vbo);
+  glDeleteBuffers(1, &ebo);
   glDeleteProgram(shader_prog);
 
   terminate();
