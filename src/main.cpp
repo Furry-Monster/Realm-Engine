@@ -20,6 +20,17 @@
 
 #define glUnbindVertexArray() (glBindVertexArray(0))
 
+static unsigned int indices[] = {
+    0, 1, 2, // 第一个三角形
+};
+
+static float vertices[] = {
+    // 位置              // 颜色
+    0.5f,  -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, // 右下
+    -0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, // 左下
+    0.0f,  0.5f,  0.0f, 0.0f, 0.0f, 1.0f  // 顶部
+};
+
 static struct GLInfo {
   char *version{nullptr};
   int window_width{0};
@@ -169,6 +180,26 @@ static GLuint loadAndLinkShader(char *vert_path = nullptr,
   return shader_prog;
 }
 
+static void drawDebugInfoWidget() {
+  ImGui::Begin("Debug Info");
+  ImGui::Text("Application average %.3f ms/frame (%.1f FPS)",
+              1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+  ImGui::Text("Window size: %d x %d", g_info.window_width,
+              g_info.window_height);
+  ImGui::Text("Framebuffer size: %d x %d", g_info.framebuffer_width,
+              g_info.framebuffer_height);
+  ImGui::Text("OpenGL Version: %s", g_info.version);
+  ImGui::Separator();
+  ImGui::Text("Vertex Info:");
+  for (int i = 0; i < 3; ++i) {
+    ImGui::Text(
+        "Vertex %d:\tPos(%5.2f, %5.2f, %5.2f) Color(%5.2f, %5.2f, %5.2f)", i,
+        vertices[i * 6 + 0], vertices[i * 6 + 1], vertices[i * 6 + 2],
+        vertices[i * 6 + 3], vertices[i * 6 + 4], vertices[i * 6 + 5]);
+  }
+  ImGui::End();
+}
+
 inline static void terminate() {
   // clean imgui
   ImGui_ImplOpenGL3_Shutdown();
@@ -179,17 +210,6 @@ inline static void terminate() {
   glfwDestroyWindow(g_window);
   glfwTerminate();
 }
-
-static unsigned int indices[] = {
-    0, 1, 2, // 第一个三角形
-};
-
-static float vertices[] = {
-    // 位置              // 颜色
-    0.5f,  -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, // 右下
-    -0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, // 左下
-    0.0f,  0.5f,  0.0f, 0.0f, 0.0f, 1.0f  // 顶部
-};
 
 int main(int argc, const char **argv) {
   // initalize glfw , glad and imgui
@@ -231,17 +251,19 @@ int main(int argc, const char **argv) {
 
   // main loop
   while (!g_info.should_close && !glfwWindowShouldClose(g_window)) {
+    // update imgui
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
+
+    drawDebugInfoWidget();
 
     // event handler...
     glfwPollEvents();
 
     // rendering...
-    float time_now = glfwGetTime();
-    float green_val = std::sin(time_now) / 2.0f + 0.5f;
-
+    float cur_time = glfwGetTime();
+    float green_val = std::sin(cur_time) / 2.0f + 0.5f;
     glClearColor(0.2, green_val, 1, 1);
     glClear(GL_COLOR_BUFFER_BIT);
 
