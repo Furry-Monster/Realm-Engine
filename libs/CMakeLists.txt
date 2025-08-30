@@ -21,8 +21,24 @@ if(NOT TARGET glm)
     target_include_directories(glm INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/glm)
 endif()
 
+if(NOT TARGET imgui)
+    set(IMGUI_DIR ${CMAKE_CURRENT_SOURCE_DIR}/imgui)
+    file(GLOB IMGUI_SOURCE
+        "${IMGUI_DIR}/*.cpp"
+        "${IMGUI_DIR}/backends/imgui_impl_glfw.cpp"
+        "${IMGUI_DIR}/backends/imgui_impl_opengl3.cpp"
+    )
+    add_library(imgui STATIC ${IMGUI_SOURCE})
+    target_include_directories(imgui PUBLIC
+        ${IMGUI_DIR}
+        ${IMGUI_DIR}/backends
+    )
+    target_link_libraries(imgui PUBLIC glfw)
+    target_compile_definitions(imgui PUBLIC IMGUI_IMPL_OPENGL_LOADER_GLAD)
+endif()
+
 add_library(reflibs INTERFACE)
-target_link_libraries(reflibs INTERFACE glad glfw glm)
+target_link_libraries(reflibs INTERFACE glad glfw glm imgui)
 
 if(UNIX AND NOT APPLE)
     find_package(OpenGL REQUIRED)
@@ -37,4 +53,5 @@ target_include_directories(reflibs INTERFACE
     ${CMAKE_CURRENT_SOURCE_DIR}/glfw/include
     ${CMAKE_CURRENT_SOURCE_DIR}/glad/include
     ${CMAKE_CURRENT_SOURCE_DIR}/glm
+    ${CMAKE_CURRENT_SOURCE_DIR}/imgui
 )
