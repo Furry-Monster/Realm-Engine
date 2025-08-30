@@ -236,60 +236,6 @@ static void applyRasterizationState() {
   glPointSize(g_raster_state.point_size);
 }
 
-static GLuint loadTexture(char *tex_path = nullptr, int load_mode = GL_RGB) {
-  GLuint texture{0};
-  glGenTextures(1, &texture);
-  glBindTexture(GL_TEXTURE_2D, texture);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-  int tex_width{0}, tex_height{0}, tex_channels{0};
-  unsigned char *tex_data = stbi_load(
-      cStringIsNullOrEmpty(tex_path) ? "../assets/texture/brick_wall.png"
-                                     : tex_path,
-      &tex_width, &tex_height, &tex_channels, 0);
-  if (!tex_data) {
-    std::cerr << "Failed to load texture..." << std::endl;
-    return 0;
-  }
-
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, tex_width, tex_height, 0, load_mode,
-               GL_UNSIGNED_BYTE, tex_data);
-  glGenerateMipmap(GL_TEXTURE_2D);
-  stbi_image_free(tex_data);
-
-  return texture;
-}
-
-inline static void triangleConfigure(GLuint &vao, GLuint &vbo, GLuint &ebo) {
-  glGenVertexArrays(1, &vao);
-  glGenBuffers(1, &vbo);
-  glGenBuffers(1, &ebo);
-
-  glBindVertexArray(vao);
-
-  glBindBuffer(GL_ARRAY_BUFFER, vbo);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertices), g_vertices, GL_STATIC_DRAW);
-
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(g_indices), g_indices,
-               GL_STATIC_DRAW);
-
-  glVertexAttribPointer(0u, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 8,
-                        (void *)0);
-  glEnableVertexAttribArray(0u);
-  glVertexAttribPointer(1u, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 8,
-                        (void *)(3 * sizeof(float)));
-  glEnableVertexAttribArray(1u);
-  glVertexAttribPointer(2u, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 8,
-                        (void *)(6 * sizeof(float)));
-  glEnableVertexAttribArray(2u);
-
-  glUnbindVertexArray();
-}
-
 static void drawDebugInfoWidget() {
   ImGui::Begin("Debug Info");
   ImGui::Text("Application average %.3f ms/frame (%.1f FPS)",
@@ -390,8 +336,8 @@ int main(int argc, const char **argv) {
   // load shader
   GLuint shader_prog = loadAndLinkShader();
 
-  // load model (try loading a test model if available)
-  // g_model = new Model("../assets/model/test.obj");
+  // load model 
+  g_model = new Model("../assets/model/test.obj");
 
   // enable depth testing
   glEnable(GL_DEPTH_TEST);
@@ -452,16 +398,6 @@ int main(int argc, const char **argv) {
     // render model or fallback triangle
     if (g_model) {
       g_model->draw(shader_prog);
-    } else {
-      // fallback: render a cube instead of triangle
-      GLuint vao{0}, vbo{0}, ebo{0};
-      triangleConfigure(vao, vbo, ebo);
-      glBindVertexArray(vao);
-      glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void *)0);
-      glUnbindVertexArray();
-      glDeleteVertexArrays(1, &vao);
-      glDeleteBuffers(1, &vbo);
-      glDeleteBuffers(1, &ebo);
     }
 
     // ui
