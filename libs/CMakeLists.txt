@@ -37,6 +37,11 @@ if(NOT TARGET imgui)
     target_compile_definitions(imgui PUBLIC IMGUI_IMPL_OPENGL_LOADER_GLAD)
 endif()
 
+if(NOT TARGET stb)
+    add_library(stb INTERFACE)
+    target_include_directories(stb INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/stb)
+endif()
+
 add_library(reflibs INTERFACE)
 target_link_libraries(reflibs INTERFACE glad glfw glm imgui)
 
@@ -54,4 +59,5 @@ target_include_directories(reflibs INTERFACE
     ${CMAKE_CURRENT_SOURCE_DIR}/glad/include
     ${CMAKE_CURRENT_SOURCE_DIR}/glm
     ${CMAKE_CURRENT_SOURCE_DIR}/imgui
+    ${CMAKE_CURRENT_SOURCE_DIR}/stb
 )

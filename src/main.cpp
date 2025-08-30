@@ -20,15 +20,21 @@
 
 #define glUnbindVertexArray() (glBindVertexArray(0))
 
-static unsigned int indices[] = {
+static unsigned int g_indices[] = {
     0, 1, 2, // 第一个三角形
 };
 
-static float vertices[] = {
+static float g_vertices[] = {
     // 位置              // 颜色
     0.5f,  -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, // 右下
     -0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, // 左下
     0.0f,  0.5f,  0.0f, 0.0f, 0.0f, 1.0f  // 顶部
+};
+
+static float g_texCoords[] = {
+    0.0f, 0.0f, // 左下角
+    1.0f, 0.0f, // 右下角
+    0.5f, 1.0f  // 上中
 };
 
 static struct GLInfo {
@@ -194,8 +200,8 @@ static void drawDebugInfoWidget() {
   for (int i = 0; i < 3; ++i) {
     ImGui::Text(
         "Vertex %d:\tPos(%5.2f, %5.2f, %5.2f) Color(%5.2f, %5.2f, %5.2f)", i,
-        vertices[i * 6 + 0], vertices[i * 6 + 1], vertices[i * 6 + 2],
-        vertices[i * 6 + 3], vertices[i * 6 + 4], vertices[i * 6 + 5]);
+        g_vertices[i * 6 + 0], g_vertices[i * 6 + 1], g_vertices[i * 6 + 2],
+        g_vertices[i * 6 + 3], g_vertices[i * 6 + 4], g_vertices[i * 6 + 5]);
   }
   ImGui::End();
 }
@@ -230,10 +236,10 @@ int main(int argc, const char **argv) {
   glBindVertexArray(vao);
 
   glBindBuffer(GL_ARRAY_BUFFER, vbo);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertices), g_vertices, GL_STATIC_DRAW);
 
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices,
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(g_indices), g_indices,
                GL_STATIC_DRAW);
 
   glVertexAttribPointer(0u, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 6,
