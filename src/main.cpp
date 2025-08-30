@@ -2,6 +2,9 @@
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
 
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb_image.h>
+
 #include <cmath>
 #include <cstring>
 #include <fstream>
@@ -186,6 +189,52 @@ static GLuint loadAndLinkShader(char *vert_path = nullptr,
   return shader_prog;
 }
 
+static GLuint loadTexture(char *tex_path = nullptr) {
+  GLuint texture{0};
+  glGenTextures(1, &texture);
+  glBindTexture(GL_TEXTURE_2D, texture);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+  int tex_width{0}, tex_height{0}, tex_channels{0};
+  unsigned char *tex_data = stbi_load(
+      cStringIsNullOrEmpty(tex_path) ? "../assets/texture/brick_wall.png"
+                                     : tex_path,
+      &tex_width, &tex_height, &tex_channels, 0);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, tex_width, tex_height, 0, GL_RGB,
+               GL_UNSIGNED_BYTE, tex_data);
+  glGenerateMipmap(GL_TEXTURE_2D);
+  stbi_image_free(tex_data);
+
+  return texture;
+}
+
+inline static void triangleConfigure(GLuint &vao, GLuint &vbo, GLuint &ebo) {
+  glGenVertexArrays(1, &vao);
+  glGenBuffers(1, &vbo);
+  glGenBuffers(1, &ebo);
+
+  glBindVertexArray(vao);
+
+  glBindBuffer(GL_ARRAY_BUFFER, vbo);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertices), g_vertices, GL_STATIC_DRAW);
+
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(g_indices), g_indices,
+               GL_STATIC_DRAW);
+
+  glVertexAttribPointer(0u, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 6,
+                        (void *)0);
+  glEnableVertexAttribArray(0);
+  glVertexAttribPointer(1u, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 6,
+                        (void *)(3 * sizeof(float)));
+  glEnableVertexAttribArray(1);
+
+  glUnbindVertexArray();
+}
+
 static void drawDebugInfoWidget() {
   ImGui::Begin("Debug Info");
   ImGui::Text("Application average %.3f ms/frame (%.1f FPS)",
@@ -229,27 +278,10 @@ int main(int argc, const char **argv) {
 
   // load & init vert array
   GLuint vao{0}, vbo{0}, ebo{0};
-  glGenVertexArrays(1, &vao);
-  glGenBuffers(1, &vbo);
-  glGenBuffers(1, &ebo);
+  triangleConfigure(vao, vbo, ebo);
 
-  glBindVertexArray(vao);
-
-  glBindBuffer(GL_ARRAY_BUFFER, vbo);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertices), g_vertices, GL_STATIC_DRAW);
-
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(g_indices), g_indices,
-               GL_STATIC_DRAW);
-
-  glVertexAttribPointer(0u, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 6,
-                        (void *)0);
-  glEnableVertexAttribArray(0);
-  glVertexAttribPointer(1u, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 6,
-                        (void *)(3 * sizeof(float)));
-  glEnableVertexAttribArray(1);
-
-  glUnbindVertexArray();
+  // load texture
+  GLuint texture = loadTexture();
 
   // use config
   glUseProgram(shader_prog);
