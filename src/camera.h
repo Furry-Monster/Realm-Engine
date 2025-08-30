@@ -10,11 +10,13 @@ enum Camera_Movement {
   RIGHT,
 };
 
-const float YAW = -90.0f;
-const float PITCH = 0.0f;
-const float SPEED = 2.5f;
-const float SENSITIVITY = 0.1f;
-const float ZOOM = 45.0f;
+static struct CameraInfo {
+  float yaw;
+  float pitch;
+  float speed;
+  float sensitivity;
+  float zoom;
+} g_camera_info{-90.0f, 0.0f, 2.5f, 0.1f, 45.0f};
 
 class Camera {
 public:
@@ -32,8 +34,8 @@ public:
   float m_zoom;
 
   Camera(glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f),
-         glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f), float yaw = YAW,
-         float pitch = PITCH);
+         glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f),
+         float yaw = g_camera_info.yaw, float pitch = g_camera_info.pitch);
 
   glm::mat4 getViewMatrix();
   glm::mat4 getProjectionMatrix(float aspect);

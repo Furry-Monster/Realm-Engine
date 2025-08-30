@@ -1,8 +1,10 @@
 #include "camera.h"
 
 Camera::Camera(glm::vec3 position, glm::vec3 up, float yaw, float pitch)
-    : m_front(glm::vec3(0.0f, 0.0f, -1.0f)), m_movement_speed(SPEED),
-      m_mouse_sensitivity(SENSITIVITY), m_zoom(ZOOM) {
+    : m_front(glm::vec3(0.0f, 0.0f, -1.0f)),
+      m_movement_speed(g_camera_info.speed),
+      m_mouse_sensitivity(g_camera_info.sensitivity),
+      m_zoom(g_camera_info.zoom) {
   m_position = position;
   m_world_up = up;
   m_yaw = yaw;

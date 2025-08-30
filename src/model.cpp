@@ -1,4 +1,5 @@
 #include "model.h"
+#include "assimp/material.h"
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
 #include <glad/gl.h>
@@ -41,32 +42,30 @@ void Mesh::setupMesh() {
 }
 
 void Mesh::draw(unsigned int shader_program) {
-  unsigned int diffuseNr = 1;
-  unsigned int normalNr = 1;
+  unsigned int diffuse_nr{1};
+  unsigned int normal_nr{1};
 
   for (unsigned int i = 0; i < m_texs.size(); i++) {
     glActiveTexture(GL_TEXTURE0 + i);
 
     std::string number;
     std::string name;
-    if (m_texs[i].type == tex_diffuse) {
+    if (m_texs[i].type == texDiffuse) {
       name = "texture_diffuse";
-      number = std::to_string(diffuseNr++);
-    } else if (m_texs[i].type == tex_normal) {
+      number = std::to_string(diffuse_nr++);
+    } else if (m_texs[i].type == texNormal) {
       name = "texture_normal";
-      number = std::to_string(normalNr++);
+      number = std::to_string(normal_nr++);
     }
 
-    glUniform1i(glGetUniformLocation(shader_program, (name + number).c_str()),
-                i);
+    std::string uniformName = name + number;
+    glUniform1i(glGetUniformLocation(shader_program, uniformName.c_str()), i);
     glBindTexture(GL_TEXTURE_2D, m_texs[i].id);
   }
 
   glBindVertexArray(m_vao);
   glDrawElements(GL_TRIANGLES, m_inds.size(), GL_UNSIGNED_INT, 0);
   glBindVertexArray(0);
-
-  glActiveTexture(GL_TEXTURE0);
 }
 
 Model::Model(const std::string &path) { loadModelFrom(path); }
@@ -74,8 +73,9 @@ Model::Model(const std::string &path) { loadModelFrom(path); }
 void Model::loadModelFrom(const std::string &path) {
   Assimp::Importer importer;
   const aiScene *scene =
-      importer.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs |
-                                  aiProcess_CalcTangentSpace);
+      importer.ReadFile(path, aiProcess_Triangulate | 
+                              aiProcess_CalcTangentSpace |
+                              aiProcess_GenNormals);
 
   if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE ||
       !scene->mRootNode) {
@@ -85,15 +85,18 @@ void Model::loadModelFrom(const std::string &path) {
 
   m_store_dir = path.substr(0, path.find_last_of('/'));
 
+  // recursively process node in scene graph
   processNode(scene->mRootNode, scene);
 }
 
 void Model::processNode(aiNode *node, const aiScene *scene) {
+  // front-order dfs
   for (unsigned int i = 0; i < node->mNumMeshes; i++) {
     aiMesh *mesh = scene->mMeshes[node->mMeshes[i]];
     m_meshes.push_back(processMesh(mesh, scene));
   }
 
+  // recurse here
   for (unsigned int i = 0; i < node->mNumChildren; i++) {
     processNode(node->mChildren[i], scene);
   }
@@ -104,101 +107,102 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene) {
   std::vector<unsigned int> indices;
   std::vector<Texture> textures;
 
+  Vertex vertex;
+  glm::vec3 vec3;
+  glm::vec2 vec2;
   for (unsigned int i = 0; i < mesh->mNumVertices; i++) {
-    Vertex vertex;
-    glm::vec3 vector;
-
-    vector.x = mesh->mVertices[i].x;
-    vector.y = mesh->mVertices[i].y;
-    vector.z = mesh->mVertices[i].z;
-    vertex.position = vector;
+    vec3.x = mesh->mVertices[i].x;
+    vec3.y = mesh->mVertices[i].y;
+    vec3.z = mesh->mVertices[i].z;
+    vertex.position = vec3;
 
     if (mesh->HasNormals()) {
-      vector.x = mesh->mNormals[i].x;
-      vector.y = mesh->mNormals[i].y;
-      vector.z = mesh->mNormals[i].z;
-      vertex.normal = vector;
+      vec3.x = mesh->mNormals[i].x;
+      vec3.y = mesh->mNormals[i].y;
+      vec3.z = mesh->mNormals[i].z;
+      vertex.normal = vec3;
     }
 
     if (mesh->mTextureCoords[0]) {
-      glm::vec2 vec;
-      vec.x = mesh->mTextureCoords[0][i].x;
-      vec.y = mesh->mTextureCoords[0][i].y;
-      vertex.tex_coords = vec;
+      vec2.x = mesh->mTextureCoords[0][i].x;
+      vec2.y = mesh->mTextureCoords[0][i].y;
+      vertex.tex_coords = vec2;
     } else
       vertex.tex_coords = glm::vec2(0.0f, 0.0f);
 
     vertices.push_back(vertex);
   }
 
+  aiFace face;
   for (unsigned int i = 0; i < mesh->mNumFaces; i++) {
-    aiFace face = mesh->mFaces[i];
+    face = mesh->mFaces[i];
     for (unsigned int j = 0; j < face.mNumIndices; j++)
       indices.push_back(face.mIndices[j]);
   }
 
   aiMaterial *material = scene->mMaterials[mesh->mMaterialIndex];
-
   std::vector<Texture> diffuseMaps =
-      loadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse");
+      loadMaterialTextures(material, aiTextureType_DIFFUSE);
   textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
-
   std::vector<Texture> normalMaps =
-      loadMaterialTextures(material, aiTextureType_HEIGHT, "texture_normal");
+      loadMaterialTextures(material, aiTextureType_HEIGHT);
   textures.insert(textures.end(), normalMaps.begin(), normalMaps.end());
 
   return Mesh(vertices, indices, textures);
 }
 
 std::vector<Texture> Model::loadMaterialTextures(aiMaterial *mat,
-                                                 aiTextureType type,
-                                                 const std::string &typeName) {
+                                                 aiTextureType type) {
   std::vector<Texture> textures;
   for (unsigned int i = 0; i < mat->GetTextureCount(type); i++) {
     aiString str;
+    texType tex_type;
     mat->GetTexture(type, i, &str);
 
+    if (type == aiTextureType_DIFFUSE)
+      tex_type = texDiffuse;
+    else if (type == aiTextureType_HEIGHT)
+      tex_type = texNormal;
+
+    // if loaded manually , skip this step
     bool skip = false;
-    for (unsigned int j = 0; j < m_textures_loaded.size(); j++) {
-      if (m_textures_loaded[j].path == str.C_Str()) {
-        textures.push_back(m_textures_loaded[j]);
+    for (unsigned int j = 0; j < m_textures.size(); j++) {
+      if (m_textures[j].path == str.C_Str()) {
+        textures.push_back(m_textures[j]);
         skip = true;
         break;
       }
     }
+
     if (!skip) {
       Texture texture;
-      texture.id = textureFromFile(str.C_Str(), this->m_store_dir);
-      texture.type = (typeName == "texture_diffuse") ? tex_diffuse : tex_normal;
+      std::string fullPath = m_store_dir + "/" + str.C_Str();
+      texture.id = textureFromFile(fullPath.c_str());
+      texture.type = tex_type;
       texture.path = str.C_Str();
       textures.push_back(texture);
-      m_textures_loaded.push_back(texture);
+      m_textures.push_back(texture);
     }
   }
   return textures;
 }
 
-unsigned int Model::textureFromFile(const char *path,
-                                    const std::string &directory) {
-  std::string filename = std::string(path);
-  filename = directory + '/' + filename;
+unsigned int Model::textureFromFile(const char *path) {
+  unsigned int texture_id;
+  glGenTextures(1, &texture_id);
 
-  unsigned int textureID;
-  glGenTextures(1, &textureID);
-
-  int width, height, nrComponents;
-  unsigned char *data =
-      stbi_load(filename.c_str(), &width, &height, &nrComponents, 0);
+  int width, height, nr_components;
+  unsigned char *data = stbi_load(path, &width, &height, &nr_components, 0);
   if (data) {
     GLenum format;
-    if (nrComponents == 1)
+    if (nr_components == 1)
       format = GL_RED;
-    else if (nrComponents == 3)
+    else if (nr_components == 3)
       format = GL_RGB;
-    else if (nrComponents == 4)
+    else if (nr_components == 4)
       format = GL_RGBA;
 
-    glBindTexture(GL_TEXTURE_2D, textureID);
+    glBindTexture(GL_TEXTURE_2D, texture_id);
     glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format,
                  GL_UNSIGNED_BYTE, data);
     glGenerateMipmap(GL_TEXTURE_2D);
@@ -215,7 +219,7 @@ unsigned int Model::textureFromFile(const char *path,
     stbi_image_free(data);
   }
 
-  return textureID;
+  return texture_id;
 }
 
 void Model::draw(unsigned int shader_program) {

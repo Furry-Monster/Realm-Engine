@@ -1,3 +1,11 @@
+#define GLFW_INCLUDE_NONE
+
+#include <GLFW/glfw3.h>
+#include <glad/gl.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
@@ -12,35 +20,12 @@
 #include <sstream>
 #include <string>
 
-#define GLFW_INCLUDE_NONE
-
-#include <GLFW/glfw3.h>
-#include <glad/gl.h>
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
-
 #include "camera.h"
 #include "model.h"
 
 #define STR_EQUAL 0
 #define cStringIsNullOrEmpty(str)                                              \
   (((str) == nullptr || std::strcmp((str), "") == STR_EQUAL))
-
-#define glUnbindVertexArray() (glBindVertexArray(0))
-
-static unsigned int g_indices[] = {
-    0, 1, 3, // 第一个三角形
-    1, 2, 3  // 第二个三角形
-};
-
-static float g_vertices[] = {
-    //     ---- 位置 ----       ---- 颜色 ----     - 纹理坐标 -
-    0.5f,  0.5f,  0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, // 右上
-    0.5f,  -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, // 右下
-    -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, // 左下
-    -0.5f, 0.5f,  0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f  // 左上
-};
 
 static struct GLInfo {
   char *version{nullptr};
@@ -52,8 +37,6 @@ static struct GLInfo {
   bool should_close{GLFW_FALSE};
 } g_info{nullptr, 640, 480, 0, 0, (char *)"LearnOpenGL", GLFW_FALSE};
 
-static GLFWwindow *g_window{nullptr};
-
 static struct RasterState {
   GLenum polygon_mode{0};
   bool enable_depth_test{false};
@@ -62,31 +45,71 @@ static struct RasterState {
   bool enable_wireframe{false};
   float line_width{0};
   float point_size{0};
-} g_raster_state{GL_FILL, false, false, GL_BACK, false, 1.0f, 1.0f};
+} g_raster_state{GL_FILL, true, false, GL_BACK, false, 1.0f, 1.0f};
 
-static Camera g_camera(glm::vec3(0.0f, 0.0f, 3.0f));
-static Model *g_model = nullptr;
-static float g_deltaTime = 0.0f;
-static float g_lastFrame = 0.0f;
+static GLFWwindow *g_window{nullptr};
+static Camera g_camera(glm::vec3(0.0f, 0.0f, 5.0f));
+static Model *g_model{nullptr};
+static float g_delta_time{0.0f};
+static float g_last_frame{0.0f};
 
-static void shouldCloseCallBack(GLFWwindow *window, int key, int scancode,
-                                int action, int mods) {
+static float g_lastX = 320.0f;
+static float g_lastY = 240.0f;
+static bool g_firstMouse = true;
+static bool g_mouseCaptured = true;
+
+static void processMovementInput(GLFWwindow *window) {
+  if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+    g_camera.processKeyboard(FORWARD, g_delta_time);
+  if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+    g_camera.processKeyboard(BACKWARD, g_delta_time);
+  if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+    g_camera.processKeyboard(LEFT, g_delta_time);
+  if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+    g_camera.processKeyboard(RIGHT, g_delta_time);
+}
+
+static void mouseCallback(GLFWwindow *window, double xpos, double ypos) {
+  if (!g_mouseCaptured)
+    return;
+
+  if (g_firstMouse) {
+    g_lastX = xpos;
+    g_lastY = ypos;
+    g_firstMouse = false;
+  }
+
+  float xoffset = xpos - g_lastX;
+  float yoffset = g_lastY - ypos;
+
+  g_lastX = xpos;
+  g_lastY = ypos;
+
+  g_camera.processMouseMovement(xoffset, yoffset);
+}
+
+static void scrollCallback(GLFWwindow *window, double xoffset, double yoffset) {
+  g_camera.processMouseScroll(yoffset);
+}
+
+static void keyboardCallBack(GLFWwindow *window, int key, int scancode,
+                             int action, int mods) {
   // esc for closing window
   if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
     g_info.should_close = GLFW_TRUE;
     glfwSetWindowShouldClose(window, GLFW_TRUE);
   }
-}
 
-static void processInput(GLFWwindow *window) {
-  if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-    g_camera.processKeyboard(FORWARD, g_deltaTime);
-  if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-    g_camera.processKeyboard(BACKWARD, g_deltaTime);
-  if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-    g_camera.processKeyboard(LEFT, g_deltaTime);
-  if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-    g_camera.processKeyboard(RIGHT, g_deltaTime);
+  // tab for toggling mouse capture
+  if (key == GLFW_KEY_TAB && action == GLFW_PRESS) {
+    g_mouseCaptured = !g_mouseCaptured;
+    if (g_mouseCaptured) {
+      glfwSetInputMode(g_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    } else {
+      glfwSetInputMode(g_window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+    }
+    g_firstMouse = true;
+  }
 }
 
 static void windowSizeCallback(GLFWwindow *window, int width, int height) {
@@ -130,9 +153,14 @@ inline static bool initialize() {
   glfwMakeContextCurrent(g_window);
 
   // bind events
-  glfwSetKeyCallback(g_window, shouldCloseCallBack);
+  glfwSetKeyCallback(g_window, keyboardCallBack);
   glfwSetWindowSizeCallback(g_window, windowSizeCallback);
   glfwSetFramebufferSizeCallback(g_window, framebufferSizeCallback);
+  glfwSetCursorPosCallback(g_window, mouseCallback);
+  glfwSetScrollCallback(g_window, scrollCallback);
+
+  // capture mouse cursor
+  glfwSetInputMode(g_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
   // init glad
   if (!gladLoadGL(glfwGetProcAddress)) {
@@ -220,6 +248,7 @@ static GLuint loadAndLinkShader(char *vert_path = nullptr,
 static void applyRasterizationState() {
   if (g_raster_state.enable_depth_test) {
     glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);
   } else {
     glDisable(GL_DEPTH_TEST);
   }
@@ -227,6 +256,7 @@ static void applyRasterizationState() {
   if (g_raster_state.enable_culling) {
     glEnable(GL_CULL_FACE);
     glCullFace(g_raster_state.cull_face);
+    glFrontFace(GL_CCW);
   } else {
     glDisable(GL_CULL_FACE);
   }
@@ -284,6 +314,9 @@ static void drawDebugInfoWidget() {
   ImGui::Text("Yaw: %.2f, Pitch: %.2f", g_camera.m_yaw, g_camera.m_pitch);
   ImGui::SliderFloat("FOV", &g_camera.m_zoom, 1.0f, 45.0f);
   ImGui::SliderFloat("Speed", &g_camera.m_movement_speed, 0.1f, 10.0f);
+  ImGui::Text("Mouse: %s (Tab to toggle)",
+              g_mouseCaptured ? "Captured" : "Free");
+  ImGui::Text("Controls: WASD to move, Mouse to look, Scroll to zoom");
 
   static char modelPath[256] = "../assets/model/";
   ImGui::InputText("Model Path", modelPath, sizeof(modelPath));
@@ -308,7 +341,7 @@ static void drawDebugInfoWidget() {
   ImGui::Text("Model Info:");
   if (g_model) {
     ImGui::Text("Meshes: %zu", g_model->m_meshes.size());
-    ImGui::Text("Textures: %zu", g_model->m_textures_loaded.size());
+    ImGui::Text("Textures: %zu", g_model->m_textures.size());
   } else {
     ImGui::Text("No model loaded");
   }
@@ -346,8 +379,8 @@ int main(int argc, const char **argv) {
   while (!g_info.should_close && !glfwWindowShouldClose(g_window)) {
     // update timing
     float currentFrame = glfwGetTime();
-    g_deltaTime = currentFrame - g_lastFrame;
-    g_lastFrame = currentFrame;
+    g_delta_time = currentFrame - g_last_frame;
+    g_last_frame = currentFrame;
 
     // update imgui
     ImGui_ImplOpenGL3_NewFrame();
@@ -358,7 +391,7 @@ int main(int argc, const char **argv) {
 
     // event handler...
     glfwPollEvents();
-    processInput(g_window);
+    processMovementInput(g_window);
 
     // rendering...
     // background
@@ -375,8 +408,8 @@ int main(int argc, const char **argv) {
         (float)g_info.framebuffer_width / (float)g_info.framebuffer_height);
     glm::mat4 view = g_camera.getViewMatrix();
     glm::mat4 model = glm::mat4(1.0f);
-    model = glm::rotate(model, (float)glfwGetTime() * glm::radians(50.0f),
-                        glm::vec3(0.5f, 1.0f, 0.0f));
+    model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
+    model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));
 
     glUniformMatrix4fv(glGetUniformLocation(shader_prog, "projection"), 1,
                        GL_FALSE, glm::value_ptr(projection));

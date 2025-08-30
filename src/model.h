@@ -6,9 +6,9 @@
 #include <string>
 #include <vector>
 
-enum tex_type {
-  tex_diffuse,
-  tex_normal,
+enum texType {
+  texDiffuse,
+  texNormal,
 };
 
 struct Vertex {
@@ -19,7 +19,7 @@ struct Vertex {
 
 struct Texture {
   unsigned int id;
-  tex_type type;
+  texType type;
   std::string path;
 };
 
@@ -42,7 +42,7 @@ private:
 
 class Model {
 public:
-  std::vector<Texture> m_textures_loaded;
+  std::vector<Texture> m_textures;
   std::vector<Mesh> m_meshes;
   std::string m_store_dir;
 
@@ -53,7 +53,7 @@ private:
   void loadModelFrom(const std::string &path);
   void processNode(aiNode *node, const aiScene *scene);
   Mesh processMesh(aiMesh *mesh, const aiScene *scene);
-  std::vector<Texture> loadMaterialTextures(aiMaterial *mat, aiTextureType type,
-                                            const std::string &type_name);
-  unsigned int textureFromFile(const char *path, const std::string &dir);
+  std::vector<Texture> loadMaterialTextures(aiMaterial *mat,
+                                            aiTextureType type);
+  unsigned int textureFromFile(const char *path);
 };
