@@ -80,13 +80,13 @@ static void shouldCloseCallBack(GLFWwindow *window, int key, int scancode,
 
 static void processInput(GLFWwindow *window) {
   if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-    g_camera.ProcessKeyboard(FORWARD, g_deltaTime);
+    g_camera.processKeyboard(FORWARD, g_deltaTime);
   if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-    g_camera.ProcessKeyboard(BACKWARD, g_deltaTime);
+    g_camera.processKeyboard(BACKWARD, g_deltaTime);
   if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-    g_camera.ProcessKeyboard(LEFT, g_deltaTime);
+    g_camera.processKeyboard(LEFT, g_deltaTime);
   if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-    g_camera.ProcessKeyboard(RIGHT, g_deltaTime);
+    g_camera.processKeyboard(RIGHT, g_deltaTime);
 }
 
 static void windowSizeCallback(GLFWwindow *window, int width, int height) {
@@ -279,11 +279,11 @@ static void drawDebugInfoWidget() {
 
   ImGui::Separator();
   ImGui::Text("Camera Controls:");
-  ImGui::Text("Position: (%.2f, %.2f, %.2f)", g_camera.Position.x,
-              g_camera.Position.y, g_camera.Position.z);
-  ImGui::Text("Yaw: %.2f, Pitch: %.2f", g_camera.Yaw, g_camera.Pitch);
-  ImGui::SliderFloat("FOV", &g_camera.Zoom, 1.0f, 45.0f);
-  ImGui::SliderFloat("Speed", &g_camera.MovementSpeed, 0.1f, 10.0f);
+  ImGui::Text("Position: (%.2f, %.2f, %.2f)", g_camera.m_position.x,
+              g_camera.m_position.y, g_camera.m_position.z);
+  ImGui::Text("Yaw: %.2f, Pitch: %.2f", g_camera.m_yaw, g_camera.m_pitch);
+  ImGui::SliderFloat("FOV", &g_camera.m_zoom, 1.0f, 45.0f);
+  ImGui::SliderFloat("Speed", &g_camera.m_movement_speed, 0.1f, 10.0f);
 
   static char modelPath[256] = "../assets/model/";
   ImGui::InputText("Model Path", modelPath, sizeof(modelPath));
@@ -336,8 +336,8 @@ int main(int argc, const char **argv) {
   // load shader
   GLuint shader_prog = loadAndLinkShader();
 
-  // load model 
-  g_model = new Model("../assets/model/test.obj");
+  // load model
+  g_model = new Model("../assets/model/backpack/backpack.obj");
 
   // enable depth testing
   glEnable(GL_DEPTH_TEST);
@@ -371,9 +371,9 @@ int main(int argc, const char **argv) {
     glUseProgram(shader_prog);
 
     // set matrices
-    glm::mat4 projection = g_camera.GetProjectionMatrix(
+    glm::mat4 projection = g_camera.getProjectionMatrix(
         (float)g_info.framebuffer_width / (float)g_info.framebuffer_height);
-    glm::mat4 view = g_camera.GetViewMatrix();
+    glm::mat4 view = g_camera.getViewMatrix();
     glm::mat4 model = glm::mat4(1.0f);
     model = glm::rotate(model, (float)glfwGetTime() * glm::radians(50.0f),
                         glm::vec3(0.5f, 1.0f, 0.0f));
@@ -393,7 +393,7 @@ int main(int argc, const char **argv) {
     glUniform3fv(glGetUniformLocation(shader_prog, "lightColor"), 1,
                  glm::value_ptr(lightColor));
     glUniform3fv(glGetUniformLocation(shader_prog, "viewPos"), 1,
-                 glm::value_ptr(g_camera.Position));
+                 glm::value_ptr(g_camera.m_position));
 
     // render model or fallback triangle
     if (g_model) {

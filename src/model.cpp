@@ -168,7 +168,7 @@ std::vector<Texture> Model::loadMaterialTextures(aiMaterial *mat,
     }
     if (!skip) {
       Texture texture;
-      texture.id = TextureFromFile(str.C_Str(), this->m_store_dir);
+      texture.id = textureFromFile(str.C_Str(), this->m_store_dir);
       texture.type = (typeName == "texture_diffuse") ? tex_diffuse : tex_normal;
       texture.path = str.C_Str();
       textures.push_back(texture);
@@ -178,7 +178,7 @@ std::vector<Texture> Model::loadMaterialTextures(aiMaterial *mat,
   return textures;
 }
 
-unsigned int Model::TextureFromFile(const char *path,
+unsigned int Model::textureFromFile(const char *path,
                                     const std::string &directory) {
   std::string filename = std::string(path);
   filename = directory + '/' + filename;
