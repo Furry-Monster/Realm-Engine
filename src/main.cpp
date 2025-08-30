@@ -16,6 +16,12 @@
 
 #include <GLFW/glfw3.h>
 #include <glad/gl.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
+#include "camera.h"
+#include "model.h"
 
 #define STR_EQUAL 0
 #define cStringIsNullOrEmpty(str)                                              \
@@ -58,6 +64,11 @@ static struct RasterState {
   float point_size{0};
 } g_raster_state{GL_FILL, false, false, GL_BACK, false, 1.0f, 1.0f};
 
+static Camera g_camera(glm::vec3(0.0f, 0.0f, 3.0f));
+static Model *g_model = nullptr;
+static float g_deltaTime = 0.0f;
+static float g_lastFrame = 0.0f;
+
 static void shouldCloseCallBack(GLFWwindow *window, int key, int scancode,
                                 int action, int mods) {
   // esc for closing window
@@ -65,6 +76,17 @@ static void shouldCloseCallBack(GLFWwindow *window, int key, int scancode,
     g_info.should_close = GLFW_TRUE;
     glfwSetWindowShouldClose(window, GLFW_TRUE);
   }
+}
+
+static void processInput(GLFWwindow *window) {
+  if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+    g_camera.ProcessKeyboard(FORWARD, g_deltaTime);
+  if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+    g_camera.ProcessKeyboard(BACKWARD, g_deltaTime);
+  if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+    g_camera.ProcessKeyboard(LEFT, g_deltaTime);
+  if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+    g_camera.ProcessKeyboard(RIGHT, g_deltaTime);
 }
 
 static void windowSizeCallback(GLFWwindow *window, int width, int height) {
@@ -310,12 +332,39 @@ static void drawDebugInfoWidget() {
   ImGui::SliderFloat("Point Size", &g_raster_state.point_size, 1.0f, 20.0f);
 
   ImGui::Separator();
-  ImGui::Text("Vertex Info:");
-  for (int i = 0; i < 4; ++i) {
-    ImGui::Text(
-        "Vertex %d:\tPos(%5.2f, %5.2f, %5.2f) Color(%5.2f, %5.2f, %5.2f)", i,
-        g_vertices[i * 8 + 0], g_vertices[i * 8 + 1], g_vertices[i * 8 + 2],
-        g_vertices[i * 8 + 3], g_vertices[i * 8 + 4], g_vertices[i * 8 + 5]);
+  ImGui::Text("Camera Controls:");
+  ImGui::Text("Position: (%.2f, %.2f, %.2f)", g_camera.Position.x,
+              g_camera.Position.y, g_camera.Position.z);
+  ImGui::Text("Yaw: %.2f, Pitch: %.2f", g_camera.Yaw, g_camera.Pitch);
+  ImGui::SliderFloat("FOV", &g_camera.Zoom, 1.0f, 45.0f);
+  ImGui::SliderFloat("Speed", &g_camera.MovementSpeed, 0.1f, 10.0f);
+
+  static char modelPath[256] = "../assets/model/";
+  ImGui::InputText("Model Path", modelPath, sizeof(modelPath));
+  if (ImGui::Button("Load Model")) {
+    if (g_model)
+      delete g_model;
+    try {
+      g_model = new Model(modelPath);
+    } catch (...) {
+      g_model = nullptr;
+    }
+  }
+  ImGui::SameLine();
+  if (ImGui::Button("Clear Model")) {
+    if (g_model) {
+      delete g_model;
+      g_model = nullptr;
+    }
+  }
+
+  ImGui::Separator();
+  ImGui::Text("Model Info:");
+  if (g_model) {
+    ImGui::Text("Meshes: %zu", g_model->m_meshes.size());
+    ImGui::Text("Textures: %zu", g_model->m_textures_loaded.size());
+  } else {
+    ImGui::Text("No model loaded");
   }
   ImGui::End();
 }
@@ -341,28 +390,19 @@ int main(int argc, const char **argv) {
   // load shader
   GLuint shader_prog = loadAndLinkShader();
 
-  // load & init vert array
-  GLuint vao{0}, vbo{0}, ebo{0};
-  triangleConfigure(vao, vbo, ebo);
+  // load model (try loading a test model if available)
+  // g_model = new Model("../assets/model/test.obj");
 
-  // load texture
-  GLuint texture0 =
-      loadTexture((char *)"../assets/texture/brick_wall.png", GL_RGB);
-  GLuint texture1 =
-      loadTexture((char *)"../assets/texture/smile_face.png", GL_RGBA);
-
-  // use follwing states
-  glUseProgram(shader_prog);
-  glActiveTexture(GL_TEXTURE0);
-  glBindTexture(GL_TEXTURE_2D, texture0);
-  glActiveTexture(GL_TEXTURE1);
-  glBindTexture(GL_TEXTURE_2D, texture1);
-  glUniform1i(glGetUniformLocation(shader_prog, "tex0"), 0);
-  glUniform1i(glGetUniformLocation(shader_prog, "tex1"), 1);
-  glBindVertexArray(vao);
+  // enable depth testing
+  glEnable(GL_DEPTH_TEST);
 
   // main loop
   while (!g_info.should_close && !glfwWindowShouldClose(g_window)) {
+    // update timing
+    float currentFrame = glfwGetTime();
+    g_deltaTime = currentFrame - g_lastFrame;
+    g_lastFrame = currentFrame;
+
     // update imgui
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
@@ -372,19 +412,57 @@ int main(int argc, const char **argv) {
 
     // event handler...
     glfwPollEvents();
+    processInput(g_window);
 
     // rendering...
     // background
-    float cur_time = glfwGetTime();
-    float green_val = std::sin(cur_time) / 2.0f + 0.5f;
-    glClearColor(0.2, green_val, 1, 1);
+    glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // apply rasterization state
     applyRasterizationState();
 
-    // triangle
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void *)0);
+    glUseProgram(shader_prog);
+
+    // set matrices
+    glm::mat4 projection = g_camera.GetProjectionMatrix(
+        (float)g_info.framebuffer_width / (float)g_info.framebuffer_height);
+    glm::mat4 view = g_camera.GetViewMatrix();
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::rotate(model, (float)glfwGetTime() * glm::radians(50.0f),
+                        glm::vec3(0.5f, 1.0f, 0.0f));
+
+    glUniformMatrix4fv(glGetUniformLocation(shader_prog, "projection"), 1,
+                       GL_FALSE, glm::value_ptr(projection));
+    glUniformMatrix4fv(glGetUniformLocation(shader_prog, "view"), 1, GL_FALSE,
+                       glm::value_ptr(view));
+    glUniformMatrix4fv(glGetUniformLocation(shader_prog, "model"), 1, GL_FALSE,
+                       glm::value_ptr(model));
+
+    // set lighting uniforms
+    glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
+    glm::vec3 lightColor(1.0f, 1.0f, 1.0f);
+    glUniform3fv(glGetUniformLocation(shader_prog, "lightPos"), 1,
+                 glm::value_ptr(lightPos));
+    glUniform3fv(glGetUniformLocation(shader_prog, "lightColor"), 1,
+                 glm::value_ptr(lightColor));
+    glUniform3fv(glGetUniformLocation(shader_prog, "viewPos"), 1,
+                 glm::value_ptr(g_camera.Position));
+
+    // render model or fallback triangle
+    if (g_model) {
+      g_model->draw(shader_prog);
+    } else {
+      // fallback: render a cube instead of triangle
+      GLuint vao{0}, vbo{0}, ebo{0};
+      triangleConfigure(vao, vbo, ebo);
+      glBindVertexArray(vao);
+      glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void *)0);
+      glUnbindVertexArray();
+      glDeleteVertexArrays(1, &vao);
+      glDeleteBuffers(1, &vbo);
+      glDeleteBuffers(1, &ebo);
+    }
 
     // ui
     ImGui::Render();
@@ -394,14 +472,10 @@ int main(int argc, const char **argv) {
     glfwSwapBuffers(g_window);
   }
 
-  glUnbindVertexArray();
-
   // clean assets
-  glDeleteTextures(1, &texture0);
-  glDeleteTextures(1, &texture1);
-  glDeleteVertexArrays(1, &vao);
-  glDeleteBuffers(1, &vbo);
-  glDeleteBuffers(1, &ebo);
+  if (g_model) {
+    delete g_model;
+  }
   glDeleteProgram(shader_prog);
 
   terminate();

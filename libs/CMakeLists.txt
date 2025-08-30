@@ -42,8 +42,23 @@ if(NOT TARGET stb)
     target_include_directories(stb INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/stb)
 endif()
 
+if(NOT TARGET assimp)
+    set(ASSIMP_BUILD_TESTS OFF CACHE BOOL "..." FORCE)
+    set(ASSIMP_BUILD_SAMPLES OFF CACHE BOOL "..." FORCE)
+    set(ASSIMP_BUILD_ASSIMP_TOOLS OFF CACHE BOOL "..." FORCE)
+    set(ASSIMP_INSTALL OFF CACHE BOOL "..." FORCE)
+    set(ASSIMP_BUILD_ZLIB ON CACHE BOOL "..." FORCE)
+    set(ASSIMP_BUILD_ALL_IMPORTERS_BY_DEFAULT OFF CACHE BOOL "..." FORCE)
+    set(ASSIMP_BUILD_OBJ_IMPORTER ON CACHE BOOL "..." FORCE)
+    set(ASSIMP_BUILD_FBX_IMPORTER ON CACHE BOOL "..." FORCE)
+    set(ASSIMP_BUILD_GLTF_IMPORTER ON CACHE BOOL "..." FORCE)
+    set(ASSIMP_BUILD_PLY_IMPORTER ON CACHE BOOL "..." FORCE)
+    set(ASSIMP_BUILD_STL_IMPORTER ON CACHE BOOL "..." FORCE)
+    add_subdirectory(assimp)
+endif()
+
 add_library(reflibs INTERFACE)
-target_link_libraries(reflibs INTERFACE glad glfw glm imgui)
+target_link_libraries(reflibs INTERFACE glad glfw glm imgui assimp)
 
 if(UNIX AND NOT APPLE)
     find_package(OpenGL REQUIRED)
@@ -60,4 +75,5 @@ target_include_directories(reflibs INTERFACE
     ${CMAKE_CURRENT_SOURCE_DIR}/glm
     ${CMAKE_CURRENT_SOURCE_DIR}/imgui
     ${CMAKE_CURRENT_SOURCE_DIR}/stb
+    ${CMAKE_CURRENT_SOURCE_DIR}/assimp/include
 )
