@@ -13,17 +13,17 @@ Mesh::Mesh(std::vector<Vertex> verts, std::vector<unsigned int> inds,
 }
 
 void Mesh::setupMesh() {
-  glGenVertexArrays(1, &m_vao);
-  glGenBuffers(1, &m_vbo);
-  glGenBuffers(1, &m_ebo);
+  glGenVertexArrays(1, &m_vao_id);
+  glGenBuffers(1, &m_vbo_id);
+  glGenBuffers(1, &m_ebo_id);
 
-  glBindVertexArray(m_vao);
+  glBindVertexArray(m_vao_id);
 
-  glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
+  glBindBuffer(GL_ARRAY_BUFFER, m_vbo_id);
   glBufferData(GL_ARRAY_BUFFER, m_verts.size() * sizeof(Vertex), &m_verts[0],
                GL_STATIC_DRAW);
 
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ebo);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ebo_id);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_inds.size() * sizeof(unsigned int),
                &m_inds[0], GL_STATIC_DRAW);
 
@@ -63,7 +63,7 @@ void Mesh::draw(unsigned int shader_program) {
     glBindTexture(GL_TEXTURE_2D, m_texs[i].id);
   }
 
-  glBindVertexArray(m_vao);
+  glBindVertexArray(m_vao_id);
   glDrawElements(GL_TRIANGLES, m_inds.size(), GL_UNSIGNED_INT, 0);
   glBindVertexArray(0);
 }
@@ -72,10 +72,9 @@ Model::Model(const std::string &path) { loadModelFrom(path); }
 
 void Model::loadModelFrom(const std::string &path) {
   Assimp::Importer importer;
-  const aiScene *scene =
-      importer.ReadFile(path, aiProcess_Triangulate | 
-                              aiProcess_CalcTangentSpace |
-                              aiProcess_GenNormals);
+  const aiScene *scene = importer.ReadFile(
+      path, aiProcess_Triangulate | aiProcess_CalcTangentSpace |
+                aiProcess_GenNormals);
 
   if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE ||
       !scene->mRootNode) {

@@ -15,13 +15,12 @@
 
 #include <cmath>
 #include <cstring>
-#include <fstream>
 #include <iostream>
-#include <sstream>
 #include <string>
 
 #include "camera.h"
 #include "model.h"
+#include "shader.h"
 
 #define STR_EQUAL 0
 #define cStringIsNullOrEmpty(str)                                              \
@@ -124,14 +123,6 @@ static void framebufferSizeCallback(GLFWwindow *window, int width, int height) {
   glViewport(0, 0, g_info.framebuffer_width, g_info.framebuffer_height);
 }
 
-inline static std::string loadShaderFrom(std::string path) {
-  std::ifstream shaderFile(path);
-  std::stringstream shader;
-  shader << shaderFile.rdbuf();
-  shaderFile.close();
-  return shader.str();
-}
-
 inline static bool initialize() {
   // init glfw
   if (!glfwInit()) {
@@ -193,56 +184,6 @@ inline static bool initialize() {
   ImGui_ImplOpenGL3_Init();
 
   return 1;
-}
-
-static GLuint loadAndLinkShader(char *vert_path = nullptr,
-                                char *frag_path = nullptr) {
-  GLint success{0};
-  char log[512];
-
-  // load vert shader
-  std::string vert_shader_src_raw = loadShaderFrom(
-      cStringIsNullOrEmpty(vert_path) ? "../shader/test.vert" : vert_path);
-  const char *vert_shader_src = vert_shader_src_raw.c_str();
-  GLuint vert_shader{0};
-  vert_shader = glCreateShader(GL_VERTEX_SHADER);
-  glShaderSource(vert_shader, 1, &vert_shader_src, nullptr);
-  glCompileShader(vert_shader);
-  glGetShaderiv(vert_shader, GL_COMPILE_STATUS, &success);
-  if (!success) {
-    glGetShaderInfoLog(vert_shader, 512, nullptr, log);
-    std::cerr << "ERROR\n" << log << std::endl;
-  }
-
-  // load frag shader
-  std::string frag_shader_src_raw = loadShaderFrom(
-      cStringIsNullOrEmpty(frag_path) ? "../shader/test.frag" : frag_path);
-  const char *frag_shader_src = frag_shader_src_raw.c_str();
-  GLuint frag_shader{0};
-  frag_shader = glCreateShader(GL_FRAGMENT_SHADER);
-  glShaderSource(frag_shader, 1, &frag_shader_src, nullptr);
-  glCompileShader(frag_shader);
-  glGetShaderiv(frag_shader, GL_COMPILE_STATUS, &success);
-  if (!success) {
-    glGetShaderInfoLog(frag_shader, 512, nullptr, log);
-    std::cerr << "ERROR\n" << log << std::endl;
-  }
-
-  // link shader
-  GLuint shader_prog{0};
-  shader_prog = glCreateProgram();
-  glAttachShader(shader_prog, vert_shader);
-  glAttachShader(shader_prog, frag_shader);
-  glLinkProgram(shader_prog);
-  glGetProgramiv(shader_prog, GL_LINK_STATUS, &success);
-  if (!success) {
-    glGetProgramInfoLog(shader_prog, 512, nullptr, log);
-    std::cerr << "ERROR\n" << log << std::endl;
-  }
-  glDeleteShader(vert_shader);
-  glDeleteShader(frag_shader);
-
-  return shader_prog;
 }
 
 static void applyRasterizationState() {
@@ -367,7 +308,7 @@ int main(int argc, const char **argv) {
   }
 
   // load shader
-  GLuint shader_prog = loadAndLinkShader();
+  Shader shader("../shader/test.vert", "../shader/test.frag");
 
   // load model
   g_model = new Model("../assets/model/backpack/backpack.obj");
@@ -401,7 +342,7 @@ int main(int argc, const char **argv) {
     // apply rasterization state
     applyRasterizationState();
 
-    glUseProgram(shader_prog);
+    shader.use();
 
     // set matrices
     glm::mat4 projection = g_camera.getProjectionMatrix(
@@ -411,26 +352,20 @@ int main(int argc, const char **argv) {
     model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
     model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));
 
-    glUniformMatrix4fv(glGetUniformLocation(shader_prog, "projection"), 1,
-                       GL_FALSE, glm::value_ptr(projection));
-    glUniformMatrix4fv(glGetUniformLocation(shader_prog, "view"), 1, GL_FALSE,
-                       glm::value_ptr(view));
-    glUniformMatrix4fv(glGetUniformLocation(shader_prog, "model"), 1, GL_FALSE,
-                       glm::value_ptr(model));
+    shader.setMat4("projection", projection);
+    shader.setMat4("view", view);
+    shader.setMat4("model", model);
 
     // set lighting uniforms
     glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
     glm::vec3 lightColor(1.0f, 1.0f, 1.0f);
-    glUniform3fv(glGetUniformLocation(shader_prog, "lightPos"), 1,
-                 glm::value_ptr(lightPos));
-    glUniform3fv(glGetUniformLocation(shader_prog, "lightColor"), 1,
-                 glm::value_ptr(lightColor));
-    glUniform3fv(glGetUniformLocation(shader_prog, "viewPos"), 1,
-                 glm::value_ptr(g_camera.m_position));
+    shader.setVec3("lightPos", lightPos);
+    shader.setVec3("lightColor", lightColor);
+    shader.setVec3("viewPos", g_camera.m_position);
 
     // render model or fallback triangle
     if (g_model) {
-      g_model->draw(shader_prog);
+      g_model->draw(shader.id);
     }
 
     // ui
@@ -445,7 +380,6 @@ int main(int argc, const char **argv) {
   if (g_model) {
     delete g_model;
   }
-  glDeleteProgram(shader_prog);
 
   terminate();
   return 0;

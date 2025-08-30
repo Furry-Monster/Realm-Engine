@@ -29,7 +29,7 @@ public:
   std::vector<unsigned int> m_inds;
   std::vector<Texture> m_texs;
 
-  unsigned int m_vao, m_vbo, m_ebo;
+  unsigned int m_vao_id, m_vbo_id, m_ebo_id;
 
   Mesh(std::vector<Vertex> verts, std::vector<unsigned int> inds,
        std::vector<Texture> texs);
