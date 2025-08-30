@@ -48,6 +48,16 @@ static struct GLInfo {
 
 static GLFWwindow *g_window{nullptr};
 
+static struct RasterState {
+  GLenum polygon_mode{0};
+  bool enable_depth_test{false};
+  bool enable_culling{false};
+  GLenum cull_face{0};
+  bool enable_wireframe{false};
+  float line_width{0};
+  float point_size{0};
+} g_raster_state{GL_FILL, false, false, GL_BACK, false, 1.0f, 1.0f};
+
 static void shouldCloseCallBack(GLFWwindow *window, int key, int scancode,
                                 int action, int mods) {
   // esc for closing window
@@ -185,6 +195,25 @@ static GLuint loadAndLinkShader(char *vert_path = nullptr,
   return shader_prog;
 }
 
+static void applyRasterizationState() {
+  if (g_raster_state.enable_depth_test) {
+    glEnable(GL_DEPTH_TEST);
+  } else {
+    glDisable(GL_DEPTH_TEST);
+  }
+
+  if (g_raster_state.enable_culling) {
+    glEnable(GL_CULL_FACE);
+    glCullFace(g_raster_state.cull_face);
+  } else {
+    glDisable(GL_CULL_FACE);
+  }
+
+  glPolygonMode(GL_FRONT_AND_BACK, g_raster_state.polygon_mode);
+  glLineWidth(g_raster_state.line_width);
+  glPointSize(g_raster_state.point_size);
+}
+
 static GLuint loadTexture(char *tex_path = nullptr, int load_mode = GL_RGB) {
   GLuint texture{0};
   glGenTextures(1, &texture);
@@ -248,13 +277,45 @@ static void drawDebugInfoWidget() {
   ImGui::Text("Framebuffer size: %d x %d", g_info.framebuffer_width,
               g_info.framebuffer_height);
   ImGui::Text("OpenGL Version: %s", g_info.version);
+
+  ImGui::Separator();
+  ImGui::Text("Rasterization Controls:");
+
+  const char *polygonModes[] = {"Fill", "Line", "Point"};
+  int currentMode = (g_raster_state.polygon_mode == GL_FILL)   ? 0
+                    : (g_raster_state.polygon_mode == GL_LINE) ? 1
+                                                               : 2;
+  if (ImGui::Combo("Polygon Mode", &currentMode, polygonModes, 3)) {
+    g_raster_state.polygon_mode = (currentMode == 0)   ? GL_FILL
+                                  : (currentMode == 1) ? GL_LINE
+                                                       : GL_POINT;
+  }
+
+  ImGui::Checkbox("Enable Depth Test", &g_raster_state.enable_depth_test);
+  ImGui::Checkbox("Enable Face Culling", &g_raster_state.enable_culling);
+
+  if (g_raster_state.enable_culling) {
+    const char *cullModes[] = {"Back", "Front", "Front and Back"};
+    int currentCull = (g_raster_state.cull_face == GL_BACK)    ? 0
+                      : (g_raster_state.cull_face == GL_FRONT) ? 1
+                                                               : 2;
+    if (ImGui::Combo("Cull Face", &currentCull, cullModes, 3)) {
+      g_raster_state.cull_face = (currentCull == 0)   ? GL_BACK
+                                 : (currentCull == 1) ? GL_FRONT
+                                                      : GL_FRONT_AND_BACK;
+    }
+  }
+
+  ImGui::SliderFloat("Line Width", &g_raster_state.line_width, 0.1f, 10.0f);
+  ImGui::SliderFloat("Point Size", &g_raster_state.point_size, 1.0f, 20.0f);
+
   ImGui::Separator();
   ImGui::Text("Vertex Info:");
-  for (int i = 0; i < 3; ++i) {
+  for (int i = 0; i < 4; ++i) {
     ImGui::Text(
         "Vertex %d:\tPos(%5.2f, %5.2f, %5.2f) Color(%5.2f, %5.2f, %5.2f)", i,
-        g_vertices[i * 6 + 0], g_vertices[i * 6 + 1], g_vertices[i * 6 + 2],
-        g_vertices[i * 6 + 3], g_vertices[i * 6 + 4], g_vertices[i * 6 + 5]);
+        g_vertices[i * 8 + 0], g_vertices[i * 8 + 1], g_vertices[i * 8 + 2],
+        g_vertices[i * 8 + 3], g_vertices[i * 8 + 4], g_vertices[i * 8 + 5]);
   }
   ImGui::End();
 }
@@ -317,7 +378,10 @@ int main(int argc, const char **argv) {
     float cur_time = glfwGetTime();
     float green_val = std::sin(cur_time) / 2.0f + 0.5f;
     glClearColor(0.2, green_val, 1, 1);
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    // apply rasterization state
+    applyRasterizationState();
 
     // triangle
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void *)0);
