@@ -1,3 +1,7 @@
+#include <imgui.h>
+#include <imgui_impl_glfw.h>
+#include <imgui_impl_opengl3.h>
+
 #include <cstring>
 #include <fstream>
 #include <iostream>
@@ -11,7 +15,7 @@
 
 #define STR_EQUAL 0
 #define cStringIsNullOrEmpty(str)                                              \
-  ((str) != nullptr && std::strcmp((str), "") != STR_EQUAL)
+  (((str) == nullptr || std::strcmp((str), "") == STR_EQUAL))
 
 #define glUnbindVertexArray() (glBindVertexArray(0))
 
@@ -55,12 +59,10 @@ inline static std::string loadShaderFrom(std::string path) {
   return shader.str();
 }
 
-float vertices[] = {-0.5f, -0.5f, 0.0f, 0.5f, -0.5f, 0.0f, 0.0f, 0.5f, 0.0f};
-
-int main(int argc, const char **argv) {
+inline static bool initialize() {
   // init glfw
   if (!glfwInit()) {
-    return 1;
+    return 0;
   }
 
   // context creating
@@ -73,7 +75,7 @@ int main(int argc, const char **argv) {
                               g_info.title, nullptr, nullptr);
   if (!g_window) {
     glfwTerminate();
-    return 1;
+    return 0;
   }
   glfwMakeContextCurrent(g_window);
 
@@ -86,7 +88,7 @@ int main(int argc, const char **argv) {
   if (!gladLoadGL(glfwGetProcAddress)) {
     glfwDestroyWindow(g_window);
     glfwTerminate();
-    return 1;
+    return 0;
   }
   glfwSwapInterval(1);
 
@@ -96,18 +98,33 @@ int main(int argc, const char **argv) {
   glViewport(0, 0, g_info.framebuffer_width, g_info.framebuffer_height);
 
   g_info.version = (char *)glfwGetVersionString();
-  if (cStringIsNullOrEmpty(g_info.version)) {
+  if (!cStringIsNullOrEmpty(g_info.version)) {
     std::string windowTitle =
         std::string(g_info.title) + " - " + std::string(g_info.version);
     glfwSetWindowTitle(g_window, windowTitle.c_str());
   }
 
-  // load vert shader
+  // init imgui
+  IMGUI_CHECKVERSION();
+  ImGui::CreateContext();
+  ImGuiIO &io = ImGui::GetIO();
+  io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+  io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
 
+  ImGui_ImplGlfw_InitForOpenGL(g_window, GLFW_TRUE);
+  ImGui_ImplOpenGL3_Init();
+
+  return 1;
+}
+
+static GLuint loadAndLinkShader(char *vert_path = nullptr,
+                                char *frag_path = nullptr) {
   GLint success{0};
   char log[512];
 
-  std::string vert_shader_src_raw = loadShaderFrom("../shader/test.vert");
+  // load vert shader
+  std::string vert_shader_src_raw = loadShaderFrom(
+      cStringIsNullOrEmpty(vert_path) ? "../shader/test.vert" : vert_path);
   const char *vert_shader_src = vert_shader_src_raw.c_str();
   GLuint vert_shader{0};
   vert_shader = glCreateShader(GL_VERTEX_SHADER);
@@ -120,7 +137,8 @@ int main(int argc, const char **argv) {
   }
 
   // load frag shader
-  std::string frag_shader_src_raw = loadShaderFrom("../shader/test.frag");
+  std::string frag_shader_src_raw = loadShaderFrom(
+      cStringIsNullOrEmpty(frag_path) ? "../shader/test.frag" : frag_path);
   const char *frag_shader_src = frag_shader_src_raw.c_str();
   GLuint frag_shader{0};
   frag_shader = glCreateShader(GL_FRAGMENT_SHADER);
@@ -146,6 +164,33 @@ int main(int argc, const char **argv) {
   glDeleteShader(vert_shader);
   glDeleteShader(frag_shader);
 
+  return shader_prog;
+}
+
+inline static void terminate() {
+  // clean imgui
+  ImGui_ImplOpenGL3_Shutdown();
+  ImGui_ImplGlfw_Shutdown();
+  ImGui::DestroyContext();
+
+  // terminate openGL
+  glfwDestroyWindow(g_window);
+  glfwTerminate();
+}
+
+static float vertices[] = {-0.5f, -0.5f, 0.0f, 0.5f, -0.5f,
+                           0.0f,  0.0f,  0.5f, 0.0f};
+
+int main(int argc, const char **argv) {
+  // initalize glfw , glad and imgui
+  if (!initialize()) {
+    std::cerr << "ERROR\nInitialize failed..." << std::endl;
+    return 1;
+  }
+
+  // load shader
+  GLuint shader_prog = loadAndLinkShader();
+
   // load & init vert array
   GLuint vao{0}, vbo{0};
   glGenVertexArrays(1, &vao);
@@ -162,6 +207,7 @@ int main(int argc, const char **argv) {
 
   glUnbindVertexArray();
 
+  // use config
   glUseProgram(shader_prog);
   glBindVertexArray(vao);
 
@@ -182,10 +228,11 @@ int main(int argc, const char **argv) {
 
   glUnbindVertexArray();
 
+  // clean assets
   glDeleteVertexArrays(1, &vao);
   glDeleteBuffers(1, &vbo);
   glDeleteProgram(shader_prog);
 
-  glfwTerminate();
+  terminate();
   return 0;
 }
