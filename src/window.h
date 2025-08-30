@@ -1,6 +1,8 @@
 #pragma once
 
+#define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
+#include <glad/gl.h>
 #include <string>
 
 class Window {
@@ -16,6 +18,7 @@ public:
   void swapBuffers() { glfwSwapBuffers(m_window); }
   void pollEvents() { glfwPollEvents(); }
 
+public:
   int getWidth() const { return m_width; }
   int getHeight() const { return m_height; }
   int getFramebufferWidth() const { return m_framebuffer_width; }
@@ -31,6 +34,7 @@ private:
   int m_framebuffer_height;
   std::string m_title;
 
+private:
   static void windowSizeCallback(GLFWwindow *window, int width, int height);
   static void framebufferSizeCallback(GLFWwindow *window, int width,
                                       int height);

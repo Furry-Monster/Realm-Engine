@@ -1,6 +1,4 @@
-#define GLFW_INCLUDE_NONE
 #include "window.h"
-#include <glad/gl.h>
 
 Window::Window(int width, int height, const char *title)
     : m_window(nullptr), m_width(width), m_height(height),

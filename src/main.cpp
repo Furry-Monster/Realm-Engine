@@ -28,7 +28,6 @@
 #define cStringIsNullOrEmpty(str)                                              \
   (((str) == nullptr || std::strcmp((str), "") == STR_EQUAL))
 
-
 static struct RasterState {
   GLenum polygon_mode{0};
   bool enable_depth_test{false};
@@ -39,12 +38,11 @@ static struct RasterState {
   float point_size{0};
 } g_raster_state{GL_FILL, true, false, GL_BACK, false, 1.0f, 1.0f};
 
-static Window* g_window{nullptr};
+static Window *g_window{nullptr};
 static Camera g_camera(glm::vec3(0.0f, 0.0f, 5.0f));
 static Model *g_model{nullptr};
 static float g_delta_time{0.0f};
 static float g_last_frame{0.0f};
-
 
 inline static bool initialize() {
   g_window = new Window(640, 480, "LearnOpenGL");
@@ -232,8 +230,9 @@ int main(int argc, const char **argv) {
     shader.use();
 
     // set matrices
-    glm::mat4 projection = g_camera.getProjectionMatrix(
-        (float)g_window->getFramebufferWidth() / (float)g_window->getFramebufferHeight());
+    glm::mat4 projection =
+        g_camera.getProjectionMatrix((float)g_window->getFramebufferWidth() /
+                                     (float)g_window->getFramebufferHeight());
     glm::mat4 view = g_camera.getViewMatrix();
     glm::mat4 model = glm::mat4(1.0f);
     model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
