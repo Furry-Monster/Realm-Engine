@@ -32,6 +32,7 @@ static struct RasterState {
 } g_raster_state{GL_FILL, true, false, GL_BACK, false, 1.0f, 1.0f};
 
 static void applyRasterizationState() {
+  // depth test
   if (g_raster_state.enable_depth_test) {
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
@@ -39,6 +40,7 @@ static void applyRasterizationState() {
     glDisable(GL_DEPTH_TEST);
   }
 
+  // culling
   if (g_raster_state.enable_culling) {
     glEnable(GL_CULL_FACE);
     glCullFace(g_raster_state.cull_face);
@@ -47,6 +49,7 @@ static void applyRasterizationState() {
     glDisable(GL_CULL_FACE);
   }
 
+  // draw mode
   glPolygonMode(GL_FRONT_AND_BACK, g_raster_state.polygon_mode);
   glLineWidth(g_raster_state.line_width);
   glPointSize(g_raster_state.point_size);
