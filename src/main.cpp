@@ -19,22 +19,15 @@
 #include <string>
 
 #include "camera.h"
+#include "input.h"
 #include "model.h"
 #include "shader.h"
+#include "window.h"
 
 #define STR_EQUAL 0
 #define cStringIsNullOrEmpty(str)                                              \
   (((str) == nullptr || std::strcmp((str), "") == STR_EQUAL))
 
-static struct GLInfo {
-  char *version{nullptr};
-  int window_width{0};
-  int window_height{0};
-  int framebuffer_width{0};
-  int framebuffer_height{0};
-  char *title{nullptr};
-  bool should_close{GLFW_FALSE};
-} g_info{nullptr, 640, 480, 0, 0, (char *)"LearnOpenGL", GLFW_FALSE};
 
 static struct RasterState {
   GLenum polygon_mode{0};
@@ -46,132 +39,23 @@ static struct RasterState {
   float point_size{0};
 } g_raster_state{GL_FILL, true, false, GL_BACK, false, 1.0f, 1.0f};
 
-static GLFWwindow *g_window{nullptr};
+static Window* g_window{nullptr};
 static Camera g_camera(glm::vec3(0.0f, 0.0f, 5.0f));
 static Model *g_model{nullptr};
 static float g_delta_time{0.0f};
 static float g_last_frame{0.0f};
 
-static float g_lastX = 320.0f;
-static float g_lastY = 240.0f;
-static bool g_firstMouse = true;
-static bool g_mouseCaptured = true;
-
-static void processMovementInput(GLFWwindow *window) {
-  if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-    g_camera.processKeyboard(FORWARD, g_delta_time);
-  if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-    g_camera.processKeyboard(BACKWARD, g_delta_time);
-  if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-    g_camera.processKeyboard(LEFT, g_delta_time);
-  if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-    g_camera.processKeyboard(RIGHT, g_delta_time);
-}
-
-static void mouseCallback(GLFWwindow *window, double xpos, double ypos) {
-  if (!g_mouseCaptured)
-    return;
-
-  if (g_firstMouse) {
-    g_lastX = xpos;
-    g_lastY = ypos;
-    g_firstMouse = false;
-  }
-
-  float xoffset = xpos - g_lastX;
-  float yoffset = g_lastY - ypos;
-
-  g_lastX = xpos;
-  g_lastY = ypos;
-
-  g_camera.processMouseMovement(xoffset, yoffset);
-}
-
-static void scrollCallback(GLFWwindow *window, double xoffset, double yoffset) {
-  g_camera.processMouseScroll(yoffset);
-}
-
-static void keyboardCallBack(GLFWwindow *window, int key, int scancode,
-                             int action, int mods) {
-  // esc for closing window
-  if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
-    g_info.should_close = GLFW_TRUE;
-    glfwSetWindowShouldClose(window, GLFW_TRUE);
-  }
-
-  // tab for toggling mouse capture
-  if (key == GLFW_KEY_TAB && action == GLFW_PRESS) {
-    g_mouseCaptured = !g_mouseCaptured;
-    if (g_mouseCaptured) {
-      glfwSetInputMode(g_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-    } else {
-      glfwSetInputMode(g_window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-    }
-    g_firstMouse = true;
-  }
-}
-
-static void windowSizeCallback(GLFWwindow *window, int width, int height) {
-  g_info.window_width = width;
-  g_info.window_height = height;
-}
-
-static void framebufferSizeCallback(GLFWwindow *window, int width, int height) {
-  g_info.framebuffer_width = width;
-  g_info.framebuffer_height = height;
-
-  glViewport(0, 0, g_info.framebuffer_width, g_info.framebuffer_height);
-}
 
 inline static bool initialize() {
-  // init glfw
-  if (!glfwInit()) {
-    return 0;
+  g_window = new Window(640, 480, "LearnOpenGL");
+  if (!g_window->initialize()) {
+    delete g_window;
+    return false;
   }
 
-  // context creating
-  glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-  g_window = glfwCreateWindow(g_info.window_width, g_info.window_height,
-                              g_info.title, nullptr, nullptr);
-  if (!g_window) {
-    glfwTerminate();
-    return 0;
-  }
-  glfwMakeContextCurrent(g_window);
-
-  // bind events
-  glfwSetKeyCallback(g_window, keyboardCallBack);
-  glfwSetWindowSizeCallback(g_window, windowSizeCallback);
-  glfwSetFramebufferSizeCallback(g_window, framebufferSizeCallback);
-  glfwSetCursorPosCallback(g_window, mouseCallback);
-  glfwSetScrollCallback(g_window, scrollCallback);
-
-  // capture mouse cursor
-  glfwSetInputMode(g_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-
-  // init glad
-  if (!gladLoadGL(glfwGetProcAddress)) {
-    glfwDestroyWindow(g_window);
-    glfwTerminate();
-    return 0;
-  }
-  glfwSwapInterval(1);
-
-  // load info from OpenGL and do some initializations
-  glfwGetFramebufferSize(g_window, &g_info.framebuffer_width,
-                         &g_info.framebuffer_height);
-  glViewport(0, 0, g_info.framebuffer_width, g_info.framebuffer_height);
-
-  g_info.version = (char *)glfwGetVersionString();
-  if (!cStringIsNullOrEmpty(g_info.version)) {
-    std::string windowTitle =
-        std::string(g_info.title) + " - " + std::string(g_info.version);
-    glfwSetWindowTitle(g_window, windowTitle.c_str());
-  }
+  // initialize input system
+  Input::initialize(g_window->getGLFWwindow());
+  Input::setCamera(&g_camera);
 
   // init imgui
   IMGUI_CHECKVERSION();
@@ -180,10 +64,10 @@ inline static bool initialize() {
   io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
   io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
 
-  ImGui_ImplGlfw_InitForOpenGL(g_window, GLFW_TRUE);
+  ImGui_ImplGlfw_InitForOpenGL(g_window->getGLFWwindow(), GLFW_TRUE);
   ImGui_ImplOpenGL3_Init();
 
-  return 1;
+  return true;
 }
 
 static void applyRasterizationState() {
@@ -211,11 +95,11 @@ static void drawDebugInfoWidget() {
   ImGui::Begin("Debug Info");
   ImGui::Text("Application average %.3f ms/frame (%.1f FPS)",
               1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-  ImGui::Text("Window size: %d x %d", g_info.window_width,
-              g_info.window_height);
-  ImGui::Text("Framebuffer size: %d x %d", g_info.framebuffer_width,
-              g_info.framebuffer_height);
-  ImGui::Text("OpenGL Version: %s", g_info.version);
+  ImGui::Text("Window size: %d x %d", g_window->getWidth(),
+              g_window->getHeight());
+  ImGui::Text("Framebuffer size: %d x %d", g_window->getFramebufferWidth(),
+              g_window->getFramebufferHeight());
+  ImGui::Text("OpenGL Version: %s", glfwGetVersionString());
 
   ImGui::Separator();
   ImGui::Text("Rasterization Controls:");
@@ -256,7 +140,7 @@ static void drawDebugInfoWidget() {
   ImGui::SliderFloat("FOV", &g_camera.m_zoom, 1.0f, 45.0f);
   ImGui::SliderFloat("Speed", &g_camera.m_movement_speed, 0.1f, 10.0f);
   ImGui::Text("Mouse: %s (Tab to toggle)",
-              g_mouseCaptured ? "Captured" : "Free");
+              Input::isMouseCaptured() ? "Captured" : "Free");
   ImGui::Text("Controls: WASD to move, Mouse to look, Scroll to zoom");
 
   static char modelPath[256] = "../assets/model/";
@@ -295,9 +179,11 @@ inline static void terminate() {
   ImGui_ImplGlfw_Shutdown();
   ImGui::DestroyContext();
 
-  // terminate openGL
-  glfwDestroyWindow(g_window);
-  glfwTerminate();
+  // terminate window
+  if (g_window) {
+    delete g_window;
+    g_window = nullptr;
+  }
 }
 
 int main(int argc, const char **argv) {
@@ -317,7 +203,7 @@ int main(int argc, const char **argv) {
   glEnable(GL_DEPTH_TEST);
 
   // main loop
-  while (!g_info.should_close && !glfwWindowShouldClose(g_window)) {
+  while (!g_window->shouldClose()) {
     // update timing
     float currentFrame = glfwGetTime();
     g_delta_time = currentFrame - g_last_frame;
@@ -331,8 +217,9 @@ int main(int argc, const char **argv) {
     drawDebugInfoWidget();
 
     // event handler...
-    glfwPollEvents();
-    processMovementInput(g_window);
+    g_window->pollEvents();
+    Input::setDeltaTime(g_delta_time);
+    Input::processKeyboard(g_window->getGLFWwindow());
 
     // rendering...
     // background
@@ -346,7 +233,7 @@ int main(int argc, const char **argv) {
 
     // set matrices
     glm::mat4 projection = g_camera.getProjectionMatrix(
-        (float)g_info.framebuffer_width / (float)g_info.framebuffer_height);
+        (float)g_window->getFramebufferWidth() / (float)g_window->getFramebufferHeight());
     glm::mat4 view = g_camera.getViewMatrix();
     glm::mat4 model = glm::mat4(1.0f);
     model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
@@ -373,7 +260,7 @@ int main(int argc, const char **argv) {
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
     // buffering...
-    glfwSwapBuffers(g_window);
+    g_window->swapBuffers();
   }
 
   // clean assets
