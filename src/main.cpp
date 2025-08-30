@@ -2,6 +2,7 @@
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
 
+#include <cmath>
 #include <cstring>
 #include <fstream>
 #include <iostream>
@@ -56,6 +57,7 @@ inline static std::string loadShaderFrom(std::string path) {
   std::ifstream shaderFile(path);
   std::stringstream shader;
   shader << shaderFile.rdbuf();
+  shaderFile.close();
   return shader.str();
 }
 
@@ -178,8 +180,16 @@ inline static void terminate() {
   glfwTerminate();
 }
 
-static float vertices[] = {-0.5f, -0.5f, 0.0f, 0.5f, -0.5f,
-                           0.0f,  0.0f,  0.5f, 0.0f};
+static unsigned int indices[] = {
+    0, 1, 2, // 第一个三角形
+};
+
+static float vertices[] = {
+    // 位置              // 颜色
+    0.5f,  -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, // 右下
+    -0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, // 左下
+    0.0f,  0.5f,  0.0f, 0.0f, 0.0f, 1.0f  // 顶部
+};
 
 int main(int argc, const char **argv) {
   // initalize glfw , glad and imgui
@@ -192,18 +202,26 @@ int main(int argc, const char **argv) {
   GLuint shader_prog = loadAndLinkShader();
 
   // load & init vert array
-  GLuint vao{0}, vbo{0};
+  GLuint vao{0}, vbo{0}, ebo{0};
   glGenVertexArrays(1, &vao);
   glGenBuffers(1, &vbo);
+  glGenBuffers(1, &ebo);
 
   glBindVertexArray(vao);
 
   glBindBuffer(GL_ARRAY_BUFFER, vbo);
   glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-  glVertexAttribPointer(0u, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3,
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices,
+               GL_STATIC_DRAW);
+
+  glVertexAttribPointer(0u, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 6,
                         (void *)0);
   glEnableVertexAttribArray(0);
+  glVertexAttribPointer(1u, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 6,
+                        (void *)(3 * sizeof(float)));
+  glEnableVertexAttribArray(1);
 
   glUnbindVertexArray();
 
@@ -213,14 +231,26 @@ int main(int argc, const char **argv) {
 
   // main loop
   while (!g_info.should_close && !glfwWindowShouldClose(g_window)) {
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    ImGui::NewFrame();
+
     // event handler...
     glfwPollEvents();
 
     // rendering...
-    glClearColor(0.2, 1, 1, 1);
+    float time_now = glfwGetTime();
+    float green_val = std::sin(time_now) / 2.0f + 0.5f;
+
+    glClearColor(0.2, green_val, 1, 1);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    glDrawArrays(GL_TRIANGLES, 0, 3);
+    // glDrawArrays(GL_TRIANGLES, 0, 3);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void *)0);
+
+    ImGui::Render();
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
     // buffering...
     glfwSwapBuffers(g_window);
