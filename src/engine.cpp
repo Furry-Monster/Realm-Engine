@@ -1,4 +1,3 @@
-#include "shader.h"
 #define GLFW_INCLUDE_NONE
 
 #include <GLFW/glfw3.h>
@@ -16,7 +15,10 @@
 
 #include "camera.h"
 #include "engine.h"
+#include "engine_context.h"
 #include "input.h"
+#include "logger.h"
+#include "shader.h"
 #include "window.h"
 
 static struct RasterState {
@@ -51,6 +53,9 @@ static void applyRasterizationState() {
 }
 
 void Engine::boot() {
+  // create context
+  g_context.create();
+
   // initialize window system
   m_window = new Window(640, 480, "LearnOpenGL");
   if (!m_window->initialize()) {
@@ -74,6 +79,8 @@ void Engine::boot() {
 
   ImGui_ImplGlfw_InitForOpenGL(m_window->getGLFWwindow(), GLFW_TRUE);
   ImGui_ImplOpenGL3_Init();
+
+  LOG_INFO("Boot Engine ...");
 }
 
 void Engine::run() {
@@ -102,6 +109,8 @@ void Engine::run() {
 }
 
 void Engine::terminate() {
+  LOG_INFO("Terminate Engine ...");
+
   // clean imgui
   ImGui_ImplOpenGL3_Shutdown();
   ImGui_ImplGlfw_Shutdown();
@@ -112,6 +121,9 @@ void Engine::terminate() {
     delete m_window;
     m_window = nullptr;
   }
+
+  // destroy context
+  g_context.destroy();
 }
 
 void Engine::tick() {
