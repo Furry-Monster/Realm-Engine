@@ -9,8 +9,12 @@ class Engine {
 public:
   void boot();
   void run();
-  void tick();
   void terminate();
+
+protected:
+  void tick();
+  void logicalTick();
+  void renderTick();
 
 private:
   Window *m_window{nullptr};
@@ -18,12 +22,9 @@ private:
   float m_delta_time{0.0f};
   float m_last_frame{0.0f};
 
-  // temp var
+  // temp var , removed latter
   Model *m_model{nullptr};
   Shader *m_shader{nullptr};
-
-  void logicalTick();
-  void renderTick();
 
   void drawDebugUI();
 };

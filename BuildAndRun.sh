@@ -13,4 +13,4 @@ echo "🔥Running ninja build..."
 ninja
 
 echo "🔥Running LearnOpenGL program..."
-./src/LearnOpenGL
+./src/RealmEngine

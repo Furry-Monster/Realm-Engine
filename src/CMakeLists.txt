@@ -1,4 +1,4 @@
-set(TARGET_NAME LearnOpenGL)
+set(TARGET_NAME RealmEngine)
 
 file(GLOB SOURCES "*.cpp" "*.c")
 file(GLOB HEADERS "*.hpp" "*.h")
