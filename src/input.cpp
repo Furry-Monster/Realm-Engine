@@ -1,10 +1,15 @@
 #include "input.h"
+#include "engine_context.h"
 
 namespace RealmEngine
 {
-    void Input::initialize(GLFWwindow* window)
+    Input::Input(Camera* camera) : m_camera(camera) {}
+
+    Input::~Input() { m_camera = nullptr; }
+
+    void Input::initialize()
     {
-        m_window = window;
+        GLFWwindow* window = g_context.m_window->getGLFWwindow();
         glfwSetWindowUserPointer(window, this);
         glfwSetCursorPosCallback(window, [](GLFWwindow* w, double x, double y) {
             static_cast<Input*>(glfwGetWindowUserPointer(w))->mouseCallback(w, x, y);
@@ -22,11 +27,12 @@ namespace RealmEngine
 
     void Input::setDeltaTime(float deltaTime) { m_delta_time = deltaTime; }
 
-    void Input::processKeyboard(GLFWwindow* window)
+    void Input::processKeyboard()
     {
         if (!m_camera)
             return;
 
+        GLFWwindow* window = g_context.m_window->getGLFWwindow();
         if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
             m_camera->processKeyboard(FORWARD, m_delta_time);
         if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
@@ -66,8 +72,10 @@ namespace RealmEngine
         }
     }
 
-    void Input::keyboardCallback(GLFWwindow* window, int key, int /*scancode*/, int action, int /*mods*/)
+    void Input::keyboardCallback(GLFWwindow* /*window*/, int key, int /*scancode*/, int action, int /*mods*/)
     {
+        GLFWwindow* window = g_context.m_window->getGLFWwindow();
+
         if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         {
             glfwSetWindowShouldClose(window, GLFW_TRUE);
@@ -86,17 +94,17 @@ namespace RealmEngine
         m_first_mouse = true;
     }
 
-    void Input::updateMouseCapture()
+    void Input::updateMouseCapture() const
     {
-        if (m_window)
+        if (GLFWwindow* window = g_context.m_window->getGLFWwindow())
         {
             if (m_mouse_captured)
             {
-                glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+                glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
             }
             else
             {
-                glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+                glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
             }
         }
     }

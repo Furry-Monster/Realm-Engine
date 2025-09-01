@@ -5,14 +5,18 @@
 #include <glad/gl.h>
 
 #include "camera.h"
+#include "window.h"
 
 namespace RealmEngine
 {
     class Input
     {
     public:
-        void initialize(GLFWwindow* window);
-        void processKeyboard(GLFWwindow* window);
+        explicit Input(Camera* camera = nullptr);
+        ~Input();
+
+        void initialize();
+        void processKeyboard();
         void setCamera(Camera* camera);
         void setDeltaTime(float deltaTime);
 
@@ -24,8 +28,7 @@ namespace RealmEngine
         void toggleMouseCapture();
 
     private:
-        Camera*     m_camera {nullptr};
-        GLFWwindow* m_window {nullptr};
+        Camera* m_camera {nullptr};
 
         float m_lastX {320.0f};
         float m_lastY {240.0f};
@@ -33,6 +36,6 @@ namespace RealmEngine
         bool  m_mouse_captured {true};
         float m_delta_time {0.0f};
 
-        void updateMouseCapture();
+        void updateMouseCapture() const;
     };
 } // namespace RealmEngine

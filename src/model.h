@@ -5,17 +5,12 @@
 
 #include <glm/glm.hpp>
 
+#include <cstdint>
 #include <string>
 #include <vector>
 
 namespace RealmEngine
 {
-    enum TexType
-    {
-        texDiffuse,
-        texNormal,
-        texAO,
-    };
 
     struct Vertex
     {
@@ -26,8 +21,15 @@ namespace RealmEngine
 
     struct Texture
     {
+        enum class Type : uint8_t
+        {
+            Diffuse,
+            Normal,
+            Specular,
+        };
+
         unsigned int id;
-        TexType      type;
+        Type         type;
         std::string  path;
     };
 
@@ -56,13 +58,14 @@ namespace RealmEngine
         std::vector<Mesh>    m_meshes;
         std::string          m_store_dir;
 
+        Model();
         explicit Model(const std::string& path);
         void draw(unsigned int shader_program);
 
     private:
-        void                 loadModelFrom(const std::string& path);
-        void                 processNode(aiNode* node, const aiScene* scene);
-        Mesh                 processMesh(aiMesh* mesh, const aiScene* scene);
-        std::vector<Texture> loadMaterialTextures(aiMaterial* mat, aiTextureType type);
+        void                 loadModel(const std::string& path);
+        std::vector<Texture> loadMaterialTextures(aiMaterial* ai_mat, aiTextureType ai_type);
+        void                 processNode(aiNode* ai_node, const aiScene* ai_scene);
+        Mesh                 processMesh(aiMesh* ai_mesh, const aiScene* ai_scene);
     };
 } // namespace RealmEngine

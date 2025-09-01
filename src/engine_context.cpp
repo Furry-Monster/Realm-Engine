@@ -4,7 +4,9 @@ namespace RealmEngine
 {
     void Context::create()
     {
+        // initialize logger system
         m_logger = std::make_shared<Logger>();
+
         // initialize window system
         m_window = std::make_shared<Window>(640, 480, "RealmEngine");
         if (!m_window->initialize())
@@ -12,9 +14,10 @@ namespace RealmEngine
             m_window.reset();
             return;
         }
+
         // initialize input system
         m_input = std::make_shared<Input>();
-        m_input->initialize(m_window->getGLFWwindow());
+        m_input->initialize();
     }
 
     void Context::destroy()

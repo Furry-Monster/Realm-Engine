@@ -126,7 +126,7 @@ namespace RealmEngine
         // event handling
         g_context.m_window->pollEvents();
         g_context.m_input->setDeltaTime(m_delta_time);
-        g_context.m_input->processKeyboard(g_context.m_window->getGLFWwindow());
+        g_context.m_input->processKeyboard();
     }
 
     void Engine::renderTick()

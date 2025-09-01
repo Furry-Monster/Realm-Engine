@@ -1,4 +1,6 @@
 #include "model.h"
+#include "assimp/material.h"
+#include "logger.h"
 
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
@@ -61,12 +63,12 @@ namespace RealmEngine
 
             std::string number;
             std::string name;
-            if (m_texs[i].type == texDiffuse)
+            if (m_texs[i].type == Texture::Type::Diffuse)
             {
                 name   = "texture_diffuse";
                 number = std::to_string(diffuse_nr++);
             }
-            else if (m_texs[i].type == texNormal)
+            else if (m_texs[i].type == Texture::Type::Normal)
             {
                 name   = "texture_normal";
                 number = std::to_string(normal_nr++);
@@ -82,9 +84,11 @@ namespace RealmEngine
         glBindVertexArray(0);
     }
 
-    Model::Model(const std::string& path) { loadModelFrom(path); }
+    Model::Model() = default;
 
-    void Model::loadModelFrom(const std::string& path)
+    Model::Model(const std::string& path) { loadModel(path); }
+
+    void Model::loadModel(const std::string& path)
     {
         Assimp::Importer importer;
         const aiScene*   scene =
@@ -102,50 +106,49 @@ namespace RealmEngine
         processNode(scene->mRootNode, scene);
     }
 
-    void Model::processNode(aiNode* node, const aiScene* scene)
+    void Model::processNode(aiNode* ai_node, const aiScene* ai_scene)
     {
         // front-order dfs
-        for (unsigned int i = 0; i < node->mNumMeshes; i++)
+        for (unsigned int i = 0; i < ai_node->mNumMeshes; i++)
         {
-            aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
-            m_meshes.push_back(processMesh(mesh, scene));
+            aiMesh* mesh = ai_scene->mMeshes[ai_node->mMeshes[i]];
+            m_meshes.push_back(processMesh(mesh, ai_scene));
         }
 
         // recurse here
-        for (unsigned int i = 0; i < node->mNumChildren; i++)
+        for (unsigned int i = 0; i < ai_node->mNumChildren; i++)
         {
-            processNode(node->mChildren[i], scene);
+            processNode(ai_node->mChildren[i], ai_scene);
         }
     }
 
-    Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene)
+    Mesh Model::processMesh(aiMesh* ai_mesh, const aiScene* ai_scene)
     {
         std::vector<Vertex>       vertices;
         std::vector<unsigned int> indices;
-        std::vector<Texture>      textures;
 
         Vertex    vertex;
         glm::vec3 vec3;
         glm::vec2 vec2;
-        for (unsigned int i = 0; i < mesh->mNumVertices; i++)
+        for (unsigned int i = 0; i < ai_mesh->mNumVertices; i++)
         {
-            vec3.x          = mesh->mVertices[i].x;
-            vec3.y          = mesh->mVertices[i].y;
-            vec3.z          = mesh->mVertices[i].z;
+            vec3.x          = ai_mesh->mVertices[i].x;
+            vec3.y          = ai_mesh->mVertices[i].y;
+            vec3.z          = ai_mesh->mVertices[i].z;
             vertex.position = vec3;
 
-            if (mesh->HasNormals())
+            if (ai_mesh->HasNormals())
             {
-                vec3.x        = mesh->mNormals[i].x;
-                vec3.y        = mesh->mNormals[i].y;
-                vec3.z        = mesh->mNormals[i].z;
+                vec3.x        = ai_mesh->mNormals[i].x;
+                vec3.y        = ai_mesh->mNormals[i].y;
+                vec3.z        = ai_mesh->mNormals[i].z;
                 vertex.normal = vec3;
             }
 
-            if (mesh->mTextureCoords[0])
+            if (ai_mesh->mTextureCoords[0])
             {
-                vec2.x            = mesh->mTextureCoords[0][i].x;
-                vec2.y            = mesh->mTextureCoords[0][i].y;
+                vec2.x            = ai_mesh->mTextureCoords[0][i].x;
+                vec2.y            = ai_mesh->mTextureCoords[0][i].y;
                 vertex.tex_coords = vec2;
             }
             else
@@ -155,14 +158,15 @@ namespace RealmEngine
         }
 
         aiFace face;
-        for (unsigned int i = 0; i < mesh->mNumFaces; i++)
+        for (unsigned int i = 0; i < ai_mesh->mNumFaces; i++)
         {
-            face = mesh->mFaces[i];
+            face = ai_mesh->mFaces[i];
             for (unsigned int j = 0; j < face.mNumIndices; j++)
                 indices.push_back(face.mIndices[j]);
         }
 
-        aiMaterial*          material     = scene->mMaterials[mesh->mMaterialIndex];
+        std::vector<Texture> textures;
+        aiMaterial*          material     = ai_scene->mMaterials[ai_mesh->mMaterialIndex];
         std::vector<Texture> diffuse_maps = loadMaterialTextures(material, aiTextureType_DIFFUSE);
         textures.insert(textures.end(), diffuse_maps.begin(), diffuse_maps.end());
         std::vector<Texture> normal_maps = loadMaterialTextures(material, aiTextureType_HEIGHT);
@@ -171,19 +175,21 @@ namespace RealmEngine
         return Mesh(vertices, indices, textures);
     }
 
-    std::vector<Texture> Model::loadMaterialTextures(aiMaterial* mat, aiTextureType type)
+    std::vector<Texture> Model::loadMaterialTextures(aiMaterial* ai_mat, aiTextureType ai_type)
     {
         std::vector<Texture> textures;
-        for (unsigned int i = 0; i < mat->GetTextureCount(type); i++)
+        for (unsigned int i = 0; i < ai_mat->GetTextureCount(ai_type); i++)
         {
-            aiString str;
-            TexType  tex_type;
-            mat->GetTexture(type, i, &str);
+            aiString      str;
+            Texture::Type tex_type;
+            ai_mat->GetTexture(ai_type, i, &str);
 
-            if (type == aiTextureType_DIFFUSE)
-                tex_type = texDiffuse;
-            else if (type == aiTextureType_HEIGHT)
-                tex_type = texNormal;
+            if (ai_type == aiTextureType_DIFFUSE)
+                tex_type = Texture::Type::Diffuse;
+            else if (ai_type == aiTextureType_HEIGHT)
+                tex_type = Texture::Type::Normal;
+            else if (ai_type == aiTextureType_SPECULAR)
+                tex_type = Texture::Type::Specular;
 
             // if loaded manually , skip this step
             bool skip = false;
@@ -213,8 +219,8 @@ namespace RealmEngine
 
     void Model::draw(unsigned int shader_program)
     {
-        for (auto& m_meshe : m_meshes)
-            m_meshe.draw(shader_program);
+        for (auto& m_mesh : m_meshes)
+            m_mesh.draw(shader_program);
     }
 
     unsigned int loadTextureFromFile(const char* path)
@@ -224,6 +230,7 @@ namespace RealmEngine
 
         int            width, height, nr_components;
         unsigned char* data = stbi_load(path, &width, &height, &nr_components, 0);
+
         if (data)
         {
             GLenum format;
