@@ -6,30 +6,33 @@
 
 #include "camera.h"
 
-class Input
+namespace RealmEngine
 {
-public:
-    void initialize(GLFWwindow* window);
-    void processKeyboard(GLFWwindow* window);
-    void setCamera(Camera* camera);
-    void setDeltaTime(float deltaTime);
+    class Input
+    {
+    public:
+        void initialize(GLFWwindow* window);
+        void processKeyboard(GLFWwindow* window);
+        void setCamera(Camera* camera);
+        void setDeltaTime(float deltaTime);
 
-    void mouseCallback(GLFWwindow* window, double xpos, double ypos);
-    void scrollCallback(GLFWwindow* window, double xoffset, double yoffset);
-    void keyboardCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
+        void mouseCallback(GLFWwindow* window, double xpos, double ypos);
+        void scrollCallback(GLFWwindow* window, double xoffset, double yoffset);
+        void keyboardCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
 
-    bool isMouseCaptured() const { return m_mouse_captured; }
-    void toggleMouseCapture();
+        bool isMouseCaptured() const { return m_mouse_captured; }
+        void toggleMouseCapture();
 
-private:
-    Camera*     m_camera {nullptr};
-    GLFWwindow* m_window {nullptr};
+    private:
+        Camera*     m_camera {nullptr};
+        GLFWwindow* m_window {nullptr};
 
-    float m_lastX {320.0f};
-    float m_lastY {240.0f};
-    bool  m_first_mouse {true};
-    bool  m_mouse_captured {true};
-    float m_delta_time {0.0f};
+        float m_lastX {320.0f};
+        float m_lastY {240.0f};
+        bool  m_first_mouse {true};
+        bool  m_mouse_captured {true};
+        float m_delta_time {0.0f};
 
-    void updateMouseCapture();
-};
+        void updateMouseCapture();
+    };
+} // namespace RealmEngine

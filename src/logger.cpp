@@ -8,27 +8,30 @@
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
 
-Logger::Logger()
+namespace RealmEngine
 {
-    // init sink
-    const auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
-    console_sink->set_level(spdlog::level::trace);
-    console_sink->set_pattern("[%^%l%$] %v");
-    const spdlog::sinks_init_list sink_list {console_sink};
+    Logger::Logger()
+    {
+        // init sink
+        const auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
+        console_sink->set_level(spdlog::level::trace);
+        console_sink->set_pattern("[%^%l%$] %v");
+        const spdlog::sinks_init_list sink_list {console_sink};
 
-    // init logger
-    spdlog::init_thread_pool(8192, 1);
-    m_logger = std::make_shared<spdlog::async_logger>("muggle_logger",
-                                                      sink_list.begin(),
-                                                      sink_list.end(),
-                                                      spdlog::thread_pool(),
-                                                      spdlog::async_overflow_policy::block);
-    m_logger->set_level(spdlog::level::trace);
-    spdlog::register_logger(m_logger);
-}
+        // init logger
+        spdlog::init_thread_pool(8192, 1);
+        m_logger = std::make_shared<spdlog::async_logger>("muggle_logger",
+                                                          sink_list.begin(),
+                                                          sink_list.end(),
+                                                          spdlog::thread_pool(),
+                                                          spdlog::async_overflow_policy::block);
+        m_logger->set_level(spdlog::level::trace);
+        spdlog::register_logger(m_logger);
+    }
 
-Logger::~Logger()
-{
-    m_logger->flush();
-    spdlog::drop_all();
-}
+    Logger::~Logger()
+    {
+        m_logger->flush();
+        spdlog::drop_all();
+    }
+} // namespace RealmEngine

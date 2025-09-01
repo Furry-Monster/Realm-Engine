@@ -19,26 +19,29 @@
 #include "model.h"
 #include "shader.h"
 
-class Engine
+namespace RealmEngine
 {
-public:
-    void boot();
-    void run();
-    void terminate();
+    class Engine
+    {
+    public:
+        void boot();
+        void run();
+        void terminate();
 
-protected:
-    void tick();
-    void logicalTick() const;
-    void renderTick();
+    protected:
+        void tick();
+        void logicalTick() const;
+        void renderTick();
 
-private:
-    float m_delta_time {0.0f};
-    float m_last_frame {0.0f};
+    private:
+        float m_delta_time {0.0f};
+        float m_last_frame {0.0f};
 
-    // temp var , removed latter(added to rendering system)
-    Camera* m_camera {nullptr};
-    Model*  m_model {nullptr};
-    Shader* m_shader {nullptr};
+        // temp var , removed latter(added to rendering system)
+        Camera* m_camera {nullptr};
+        Model*  m_model {nullptr};
+        Shader* m_shader {nullptr};
 
-    void drawDebugUI();
-};
+        void drawDebugUI();
+    };
+} // namespace RealmEngine

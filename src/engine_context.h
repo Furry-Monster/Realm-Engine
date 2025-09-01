@@ -6,19 +6,22 @@
 
 #include <memory>
 
-class Logger;
-class Input;
-class Window;
-
-class Context
+namespace RealmEngine
 {
-public:
-    void create();
-    void destroy();
+    class Logger;
+    class Input;
+    class Window;
 
-    std::shared_ptr<Logger> m_logger;
-    std::shared_ptr<Input>  m_input;
-    std::shared_ptr<Window> m_window;
-};
+    class Context
+    {
+    public:
+        void create();
+        void destroy();
 
-extern Context g_context;
+        std::shared_ptr<Logger> m_logger;
+        std::shared_ptr<Input>  m_input;
+        std::shared_ptr<Window> m_window;
+    };
+
+    extern Context g_context;
+} // namespace RealmEngine

@@ -2,9 +2,11 @@
 
 int main(int /*argc*/, const char** /*argv*/)
 {
-    Engine* engine = new Engine();
+    RealmEngine::Engine* engine = new RealmEngine::Engine();
+
     engine->boot();
     engine->run();
     engine->terminate();
+
     return 0;
 }

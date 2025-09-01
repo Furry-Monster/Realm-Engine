@@ -1,25 +1,28 @@
 #include "engine_context.h"
 
-void Context::create()
+namespace RealmEngine
 {
-    m_logger = std::make_shared<Logger>();
-    // initialize window system
-    m_window = std::make_shared<Window>(640, 480, "RealmEngine");
-    if (!m_window->initialize())
+    void Context::create()
     {
-        m_window.reset();
-        return;
+        m_logger = std::make_shared<Logger>();
+        // initialize window system
+        m_window = std::make_shared<Window>(640, 480, "RealmEngine");
+        if (!m_window->initialize())
+        {
+            m_window.reset();
+            return;
+        }
+        // initialize input system
+        m_input = std::make_shared<Input>();
+        m_input->initialize(m_window->getGLFWwindow());
     }
-    // initialize input system
-    m_input = std::make_shared<Input>();
-    m_input->initialize(m_window->getGLFWwindow());
-}
 
-void Context::destroy()
-{
-    m_input.reset();
-    m_window.reset();
-    m_logger.reset();
-}
+    void Context::destroy()
+    {
+        m_input.reset();
+        m_window.reset();
+        m_logger.reset();
+    }
 
-Context g_context;
+    Context g_context;
+} // namespace RealmEngine
