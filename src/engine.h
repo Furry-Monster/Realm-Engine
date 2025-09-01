@@ -17,6 +17,7 @@
 
 #include "camera.h"
 #include "model.h"
+#include "renderer.h"
 #include "shader.h"
 
 namespace RealmEngine
@@ -38,9 +39,10 @@ namespace RealmEngine
         float m_last_frame {0.0f};
 
         // temp var , removed latter(added to rendering system)
-        Camera* m_camera {nullptr};
-        Model*  m_model {nullptr};
-        Shader* m_shader {nullptr};
+        Camera*   m_camera {nullptr};
+        Model*    m_model {nullptr};
+        Shader*   m_shader {nullptr};
+        Renderer* m_renderer {nullptr};
 
         void drawDebugUI();
     };

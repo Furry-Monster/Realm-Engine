@@ -3,47 +3,6 @@
 
 namespace RealmEngine
 {
-    static struct RasterState
-    {
-        GLenum polygon_mode {0};
-        bool   enable_depth_test {false};
-        bool   enable_culling {false};
-        GLenum cull_face {0};
-        bool   enable_wireframe {false};
-        float  line_width {0};
-        float  point_size {0};
-    } g_raster_state {GL_FILL, true, false, GL_BACK, false, 1.0f, 1.0f};
-
-    static void applyRasterizationState()
-    {
-        // depth test
-        if (g_raster_state.enable_depth_test)
-        {
-            glEnable(GL_DEPTH_TEST);
-            glDepthFunc(GL_LESS);
-        }
-        else
-        {
-            glDisable(GL_DEPTH_TEST);
-        }
-
-        // culling
-        if (g_raster_state.enable_culling)
-        {
-            glEnable(GL_CULL_FACE);
-            glCullFace(g_raster_state.cull_face);
-            glFrontFace(GL_CCW);
-        }
-        else
-        {
-            glDisable(GL_CULL_FACE);
-        }
-
-        // draw mode
-        glPolygonMode(GL_FRONT_AND_BACK, g_raster_state.polygon_mode);
-        glLineWidth(g_raster_state.line_width);
-        glPointSize(g_raster_state.point_size);
-    }
 
     // NOLINTNEXTLINE(readability-convert-member-functions-to-static)
     void Engine::boot()
@@ -66,7 +25,9 @@ namespace RealmEngine
 
     void Engine::run()
     {
-        // TODO: 分离render部分初始化
+        // initialize renderer
+        m_renderer = new Renderer();
+        m_renderer->initialize();
 
         // initialize camera system
         m_camera = new Camera(glm::vec3(0.0f, 0.0f, 5.0f));
@@ -75,8 +36,6 @@ namespace RealmEngine
         m_model = new Model("../assets/model/backpack/backpack.obj");
         // load shader
         m_shader = new Shader("../shader/test.vert", "../shader/test.frag");
-        // enable depth testing
-        glEnable(GL_DEPTH_TEST);
 
         while (!g_context.m_window->shouldClose())
         {
@@ -92,6 +51,7 @@ namespace RealmEngine
         delete m_shader;
         delete m_model;
         delete m_camera;
+        delete m_renderer;
     }
 
     // NOLINTNEXTLINE(readability-convert-member-functions-to-static)
@@ -130,14 +90,12 @@ namespace RealmEngine
 
         drawDebugUI();
 
-        // background
-        glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        // begin frame
+        m_renderer->beginFrame();
+        m_renderer->clear();
 
         // apply rasterization state
-        applyRasterizationState();
-
-        m_shader->use();
+        m_renderer->applyRasterizationState();
 
         // set matrices
         glm::mat4 projection =
@@ -148,22 +106,19 @@ namespace RealmEngine
         model           = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
         model           = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));
 
-        m_shader->setMat4("projection", projection);
-        m_shader->setMat4("view", view);
-        m_shader->setMat4("model", model);
-
-        // set lighting uniforms
+        // set lighting
         glm::vec3 light_pos(1.2f, 1.0f, 2.0f);
         glm::vec3 light_color(1.0f, 1.0f, 1.0f);
-        m_shader->setVec3("lightPos", light_pos);
-        m_shader->setVec3("lightColor", light_color);
-        m_shader->setVec3("viewPos", m_camera->m_position);
+        m_renderer->setLighting(m_shader, light_pos, light_color, m_camera->m_position);
 
-        // render model or fallback triangle
+        // render model
         if (m_model)
         {
-            m_model->draw(m_shader->id);
+            m_renderer->renderModel(m_model, m_shader, model, view, projection);
         }
+
+        // end frame
+        m_renderer->endFrame();
 
         // ui
         ImGui::Render();
@@ -188,34 +143,32 @@ namespace RealmEngine
         ImGui::Separator();
         ImGui::Text("Rasterization Controls:");
 
+        RasterizationState& raster_state = m_renderer->getRasterizationState();
+
         const char* polygon_modes[] = {"Fill", "Line", "Point"};
-        int         current_mode    = (g_raster_state.polygon_mode == GL_FILL) ? 0 :
-                                      (g_raster_state.polygon_mode == GL_LINE) ? 1 :
-                                                                                 2;
+        int current_mode = (raster_state.polygon_mode == GL_FILL) ? 0 : (raster_state.polygon_mode == GL_LINE) ? 1 : 2;
         if (ImGui::Combo("Polygon Mode", &current_mode, polygon_modes, 3))
         {
-            g_raster_state.polygon_mode = (current_mode == 0) ? GL_FILL : (current_mode == 1) ? GL_LINE : GL_POINT;
+            raster_state.polygon_mode = (current_mode == 0) ? GL_FILL : (current_mode == 1) ? GL_LINE : GL_POINT;
         }
 
-        ImGui::Checkbox("Enable Depth Test", &g_raster_state.enable_depth_test);
-        ImGui::Checkbox("Enable Face Culling", &g_raster_state.enable_culling);
+        ImGui::Checkbox("Enable Depth Test", &raster_state.enable_depth_test);
+        ImGui::Checkbox("Enable Face Culling", &raster_state.enable_culling);
 
-        if (g_raster_state.enable_culling)
+        if (raster_state.enable_culling)
         {
             const char* cull_modes[] = {"Back", "Front", "Front and Back"};
-            int         current_cull = (g_raster_state.cull_face == GL_BACK)  ? 0 :
-                                       (g_raster_state.cull_face == GL_FRONT) ? 1 :
-                                                                                2;
+            int current_cull = (raster_state.cull_face == GL_BACK) ? 0 : (raster_state.cull_face == GL_FRONT) ? 1 : 2;
             if (ImGui::Combo("Cull Face", &current_cull, cull_modes, 3))
             {
-                g_raster_state.cull_face = (current_cull == 0) ? GL_BACK :
-                                           (current_cull == 1) ? GL_FRONT :
-                                                                 GL_FRONT_AND_BACK;
+                raster_state.cull_face = (current_cull == 0) ? GL_BACK :
+                                         (current_cull == 1) ? GL_FRONT :
+                                                               GL_FRONT_AND_BACK;
             }
         }
 
-        ImGui::SliderFloat("Line Width", &g_raster_state.line_width, 0.1f, 10.0f);
-        ImGui::SliderFloat("Point Size", &g_raster_state.point_size, 1.0f, 20.0f);
+        ImGui::SliderFloat("Line Width", &raster_state.line_width, 0.1f, 10.0f);
+        ImGui::SliderFloat("Point Size", &raster_state.point_size, 1.0f, 20.0f);
 
         ImGui::Separator();
         ImGui::Text("Camera Controls:");
