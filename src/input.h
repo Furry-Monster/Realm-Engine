@@ -16,7 +16,6 @@ namespace RealmEngine
         ~Input();
 
         void initialize();
-        void processKeyboard();
         void setCamera(Camera* camera);
         void setDeltaTime(float deltaTime);
 
@@ -28,12 +27,14 @@ namespace RealmEngine
         void mouseCallback(double xpos, double ypos);
         void scrollCallback(double yoffset);
         void keyboardCallback(int key, int action);
+        void movementCallback(int key, int action);
 
     private:
         Camera* m_camera {nullptr};
 
         float m_lastX {320.0f};
         float m_lastY {240.0f};
+
         bool  m_first_mouse {true};
         bool  m_mouse_captured {true};
         float m_delta_time {0.0f};

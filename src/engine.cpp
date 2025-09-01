@@ -104,13 +104,6 @@ namespace RealmEngine
         ImGui_ImplGlfw_Shutdown();
         ImGui::DestroyContext();
 
-        // terminate window
-        if (g_context.m_window)
-        {
-            g_context.m_window.reset();
-            g_context.m_window = nullptr;
-        }
-
         // destroy context
         g_context.destroy();
     }
@@ -126,7 +119,6 @@ namespace RealmEngine
         // event handling
         g_context.m_window->pollEvents();
         g_context.m_input->setDeltaTime(m_delta_time);
-        g_context.m_input->processKeyboard();
     }
 
     void Engine::renderTick()

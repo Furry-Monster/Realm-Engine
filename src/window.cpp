@@ -2,9 +2,8 @@
 
 namespace RealmEngine
 {
-    Window::Window(int width, int height, const char* title) :
-        m_window(nullptr), m_width(width), m_height(height), m_framebuffer_width(0), m_framebuffer_height(0),
-        m_title(title)
+    Window::Window(const int width, const int height, const char* title) :
+        m_width(width), m_height(height), m_title(title)
     {}
 
     Window::~Window() { terminate(); }

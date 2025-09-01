@@ -184,12 +184,12 @@ namespace RealmEngine
 
     private:
         // var below are given
-        GLFWwindow* m_window;
-        int         m_width;
-        int         m_height;
+        GLFWwindow* m_window {nullptr};
+        int         m_width {0};
+        int         m_height {0};
         // var below are detected
-        int         m_framebuffer_width;
-        int         m_framebuffer_height;
+        int         m_framebuffer_width {0};
+        int         m_framebuffer_height {0};
         std::string m_title;
 
         // events

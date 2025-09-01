@@ -1,4 +1,6 @@
 #include "input.h"
+#include "GLFW/glfw3.h"
+#include "camera.h"
 #include "engine_context.h"
 
 namespace RealmEngine
@@ -9,44 +11,19 @@ namespace RealmEngine
 
     void Input::initialize()
     {
-        // GLFWwindow* window = g_context.m_window->getGLFWwindow();
-        // glfwSetWindowUserPointer(window, this);
-        // glfwSetCursorPosCallback(window, [](GLFWwindow* w, double x, double y) {
-        //     static_cast<Input*>(glfwGetWindowUserPointer(w))->mouseCallback(w, x, y);
-        // });
-        // glfwSetScrollCallback(window, [](GLFWwindow* w, double x, double y) {
-        //     static_cast<Input*>(glfwGetWindowUserPointer(w))->scrollCallback(w, x, y);
-        // });
-        // glfwSetKeyCallback(window, [](GLFWwindow* w, int key, int scancode, int action, int mods) {
-        //     static_cast<Input*>(glfwGetWindowUserPointer(w))->keyboardCallback(w, key, scancode, action, mods);
-        // });
-        // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-
         g_context.m_window->registerOnCursorPosFunc([this](double xpos, double ypos) { mouseCallback(xpos, ypos); });
         g_context.m_window->registerOnScrollFunc([this](double /*xpos*/, double ypos) { scrollCallback(ypos); });
         g_context.m_window->registerOnKeyFunc(
             [this](int key, int /*scancode*/, int action, int /*mods*/) { keyboardCallback(key, action); });
+        g_context.m_window->registerOnKeyFunc(
+            [this](int key, int /*scancode*/, int action, int /*mods*/) { movementCallback(key, action); });
+
+        glfwSetInputMode(g_context.m_window->getGLFWwindow(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     }
 
     void Input::setCamera(Camera* camera) { m_camera = camera; }
 
     void Input::setDeltaTime(float deltaTime) { m_delta_time = deltaTime; }
-
-    void Input::processKeyboard()
-    {
-        if (!m_camera)
-            return;
-
-        GLFWwindow* window = g_context.m_window->getGLFWwindow();
-        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-            m_camera->processKeyboard(FORWARD, m_delta_time);
-        if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-            m_camera->processKeyboard(BACKWARD, m_delta_time);
-        if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-            m_camera->processKeyboard(LEFT, m_delta_time);
-        if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-            m_camera->processKeyboard(RIGHT, m_delta_time);
-    }
 
     void Input::mouseCallback(double xpos, double ypos)
     {
@@ -90,6 +67,21 @@ namespace RealmEngine
         {
             toggleMouseCapture();
         }
+    }
+
+    void Input::movementCallback(int key, int action)
+    {
+        if (!m_camera)
+            return;
+
+        if (key == GLFW_KEY_W && action == GLFW_PRESS)
+            m_camera->processKeyboard(FORWARD, m_delta_time);
+        if (key == GLFW_KEY_A && action == GLFW_PRESS)
+            m_camera->processKeyboard(LEFT, m_delta_time);
+        if (key == GLFW_KEY_S && action == GLFW_PRESS)
+            m_camera->processKeyboard(BACKWARD, m_delta_time);
+        if (key == GLFW_KEY_D && action == GLFW_PRESS)
+            m_camera->processKeyboard(RIGHT, m_delta_time);
     }
 
     void Input::toggleMouseCapture()
