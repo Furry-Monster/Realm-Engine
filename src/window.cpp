@@ -11,6 +11,7 @@ namespace RealmEngine
 
     bool Window::initialize()
     {
+        // init glfw
         if (!glfwInit())
         {
             return false;
@@ -29,10 +30,7 @@ namespace RealmEngine
         }
         glfwMakeContextCurrent(m_window);
 
-        glfwSetWindowUserPointer(m_window, this);
-        glfwSetWindowSizeCallback(m_window, windowSizeCallback);
-        glfwSetFramebufferSizeCallback(m_window, framebufferSizeCallback);
-
+        // init glad
         if (!gladLoadGL(glfwGetProcAddress))
         {
             glfwDestroyWindow(m_window);
@@ -41,9 +39,24 @@ namespace RealmEngine
         }
         glfwSwapInterval(1);
 
+        // bind native window callbacks
+        glfwSetWindowUserPointer(m_window, this);
+        glfwSetKeyCallback(m_window, keyCallback);
+        glfwSetCharCallback(m_window, charCallback);
+        glfwSetCharModsCallback(m_window, charModsCallback);
+        glfwSetMouseButtonCallback(m_window, mouseButtonCallback);
+        glfwSetCursorPosCallback(m_window, cursorPosCallback);
+        glfwSetCursorEnterCallback(m_window, cursorEnterCallback);
+        glfwSetScrollCallback(m_window, scrollCallback);
+        glfwSetDropCallback(m_window, dropCallback);
+        glfwSetWindowSizeCallback(m_window, windowSizeCallback);
+        glfwSetWindowCloseCallback(m_window, windowCloseCallback);
+
+        // set frame buffer size
         glfwGetFramebufferSize(m_window, &m_framebuffer_width, &m_framebuffer_height);
         glViewport(0, 0, m_framebuffer_width, m_framebuffer_height);
 
+        // set title with API version
         const char* version = glfwGetVersionString();
         if (version)
         {
@@ -61,36 +74,8 @@ namespace RealmEngine
             glfwDestroyWindow(m_window);
             m_window = nullptr;
         }
+
         glfwTerminate();
     }
 
-    void Window::setTitle(const std::string& title)
-    {
-        m_title = title;
-        if (m_window)
-        {
-            glfwSetWindowTitle(m_window, title.c_str());
-        }
-    }
-
-    void Window::windowSizeCallback(GLFWwindow* window, int width, int height)
-    {
-        Window* win = static_cast<Window*>(glfwGetWindowUserPointer(window));
-        if (win)
-        {
-            win->m_width  = width;
-            win->m_height = height;
-        }
-    }
-
-    void Window::framebufferSizeCallback(GLFWwindow* window, int width, int height)
-    {
-        Window* win = static_cast<Window*>(glfwGetWindowUserPointer(window));
-        if (win)
-        {
-            win->m_framebuffer_width  = width;
-            win->m_framebuffer_height = height;
-        }
-        glViewport(0, 0, width, height);
-    }
 } // namespace RealmEngine

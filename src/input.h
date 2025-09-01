@@ -20,12 +20,14 @@ namespace RealmEngine
         void setCamera(Camera* camera);
         void setDeltaTime(float deltaTime);
 
-        void mouseCallback(GLFWwindow* window, double xpos, double ypos);
-        void scrollCallback(GLFWwindow* window, double xoffset, double yoffset);
-        void keyboardCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
-
         bool isMouseCaptured() const { return m_mouse_captured; }
+
+    protected:
         void toggleMouseCapture();
+
+        void mouseCallback(double xpos, double ypos);
+        void scrollCallback(double yoffset);
+        void keyboardCallback(int key, int action);
 
     private:
         Camera* m_camera {nullptr};
@@ -35,7 +37,5 @@ namespace RealmEngine
         bool  m_first_mouse {true};
         bool  m_mouse_captured {true};
         float m_delta_time {0.0f};
-
-        void updateMouseCapture() const;
     };
 } // namespace RealmEngine
