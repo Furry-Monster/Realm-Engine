@@ -1,6 +1,4 @@
 #include "model.h"
-#include "assimp/material.h"
-#include "logger.h"
 
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
@@ -171,6 +169,8 @@ namespace RealmEngine
         textures.insert(textures.end(), diffuse_maps.begin(), diffuse_maps.end());
         std::vector<Texture> normal_maps = loadMaterialTextures(material, aiTextureType_HEIGHT);
         textures.insert(textures.end(), normal_maps.begin(), normal_maps.end());
+        std::vector<Texture> specular_maps = loadMaterialTextures(material, aiTextureType_SPECULAR);
+        textures.insert(textures.end(), specular_maps.begin(), specular_maps.end());
 
         return Mesh(vertices, indices, textures);
     }

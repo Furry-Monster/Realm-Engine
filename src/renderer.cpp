@@ -12,7 +12,7 @@ namespace RealmEngine
     {
         if (m_initialized)
         {
-            shutdown();
+            terminate();
         }
     }
 
@@ -31,7 +31,7 @@ namespace RealmEngine
         LOG_INFO("Renderer initialized");
     }
 
-    void Renderer::shutdown()
+    void Renderer::terminate()
     {
         if (!m_initialized)
         {
@@ -40,7 +40,7 @@ namespace RealmEngine
         }
 
         m_initialized = false;
-        LOG_INFO("Renderer shutdown");
+        LOG_INFO("Renderer terminated");
     }
 
     void Renderer::beginFrame() const
@@ -66,10 +66,6 @@ namespace RealmEngine
         glClearColor(color.r, color.g, color.b, color.a);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     }
-
-    void Renderer::setViewport(int width, int height) { glViewport(0, 0, width, height); }
-
-    void Renderer::setRasterizationState(const RasterizationState& state) { m_raster_state = state; }
 
     void Renderer::applyRasterizationState() const
     {
@@ -106,9 +102,7 @@ namespace RealmEngine
                                const glm::mat4& projection_matrix)
     {
         if (!model || !shader)
-        {
             return;
-        }
 
         shader->use();
 
@@ -125,9 +119,7 @@ namespace RealmEngine
                                const glm::vec3& view_pos)
     {
         if (!shader)
-        {
             return;
-        }
 
         shader->setVec3("lightPos", light_pos);
         shader->setVec3("lightColor", light_color);

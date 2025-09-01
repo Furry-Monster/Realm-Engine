@@ -3,7 +3,6 @@
 
 namespace RealmEngine
 {
-
     // NOLINTNEXTLINE(readability-convert-member-functions-to-static)
     void Engine::boot()
     {

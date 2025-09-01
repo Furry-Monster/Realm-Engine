@@ -30,15 +30,15 @@ namespace RealmEngine
         ~Renderer();
 
         void initialize();
-        void shutdown();
+        void terminate();
 
         void beginFrame() const;
         void endFrame() const;
 
         void clear(const glm::vec4& color = glm::vec4(0.05f, 0.05f, 0.05f, 1.0f));
-        void setViewport(int width, int height);
+        void setViewport(int width, int height) { glViewport(0, 0, width, height); }
 
-        void setRasterizationState(const RasterizationState& state);
+        void setRasterizationState(const RasterizationState& state) { m_raster_state = state; }
         void applyRasterizationState() const;
 
         void renderModel(Model*           model,
