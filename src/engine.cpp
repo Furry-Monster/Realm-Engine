@@ -60,7 +60,7 @@ void Engine::boot() {
   g_context.create();
 
   // initialize window system
-  m_window = new Window(640, 480, "LearnOpenGL");
+  m_window = new Window(640, 480, "RealmEngine");
   if (!m_window->initialize()) {
     delete m_window;
     return;

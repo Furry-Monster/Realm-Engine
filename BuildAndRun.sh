@@ -12,5 +12,5 @@ cmake ..
 echo "🔥Running ninja build..."
 ninja
 
-echo "🔥Running LearnOpenGL program..."
+echo "🔥Running Realm Engine program..."
 ./src/RealmEngine
