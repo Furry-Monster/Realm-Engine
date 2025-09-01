@@ -13,9 +13,10 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
-#include "engine.h"
 #include <cmath>
 #include <cstring>
+
+#include "engine.h"
 
 int main(int /*argc*/, const char** /*argv*/)
 {

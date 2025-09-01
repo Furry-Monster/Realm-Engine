@@ -1,5 +1,9 @@
 #pragma once
 
+#include "input.h"
+#include "logger.h"
+#include "window.h"
+
 #include <memory>
 
 class Logger;

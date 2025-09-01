@@ -1,23 +1,5 @@
-#include "opengl_glfw.h"
-
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
-
-#include <imgui.h>
-#include <imgui_impl_glfw.h>
-#include <imgui_impl_opengl3.h>
-
-#include <cmath>
-#include <cstring>
-
-#include "camera.h"
 #include "engine.h"
 #include "engine_context.h"
-#include "input.h"
-#include "logger.h"
-#include "shader.h"
-#include "window.h"
 
 static struct RasterState
 {
@@ -61,6 +43,7 @@ static void applyRasterizationState()
     glPointSize(g_raster_state.point_size);
 }
 
+// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
 void Engine::boot()
 {
     // create context
@@ -109,6 +92,7 @@ void Engine::run()
     delete m_camera;
 }
 
+// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
 void Engine::terminate()
 {
     LOG_INFO("Terminate Engine ...");

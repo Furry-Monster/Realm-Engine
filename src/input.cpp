@@ -1,5 +1,4 @@
 #include "input.h"
-#include "camera.h"
 
 void Input::initialize(GLFWwindow* window)
 {

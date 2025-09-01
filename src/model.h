@@ -10,6 +10,7 @@ enum TexType
 {
     texDiffuse,
     texNormal,
+    texAO,
 };
 
 struct Vertex
@@ -32,8 +33,9 @@ public:
     std::vector<Vertex>       m_verts;
     std::vector<unsigned int> m_inds;
     std::vector<Texture>      m_texs;
-
-    unsigned int m_vao_id, m_vbo_id, m_ebo_id;
+    unsigned int              m_vao_id;
+    unsigned int              m_vbo_id;
+    unsigned int              m_ebo_id;
 
     Mesh(std::vector<Vertex> verts, std::vector<unsigned int> inds, std::vector<Texture> texs);
 
@@ -58,5 +60,4 @@ private:
     void                 processNode(aiNode* node, const aiScene* scene);
     Mesh                 processMesh(aiMesh* mesh, const aiScene* scene);
     std::vector<Texture> loadMaterialTextures(aiMaterial* mat, aiTextureType type);
-    unsigned int         loadTextureFromFile(const char* path);
 };

@@ -1,10 +1,17 @@
 #include "model.h"
-#include "assimp/material.h"
+
+#define GLFW_INCLUDE_NONE
+#include <GLFW/glfw3.h>
+#include <glad/gl.h>
+
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
-#include <glad/gl.h>
-#include <iostream>
 #include <stb_image.h>
+
+#include "engine_context.h"
+#include "logger.h"
+
+unsigned int loadTextureFromFile(const char* path);
 
 Mesh::Mesh(std::vector<Vertex> verts, std::vector<unsigned int> inds, std::vector<Texture> texs) :
     m_verts(verts), m_inds(inds), m_texs(texs)
@@ -81,7 +88,7 @@ void Model::loadModelFrom(const std::string& path)
 
     if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
     {
-        std::cerr << "ERROR::ASSIMP:: " << importer.GetErrorString() << std::endl;
+        LOG_ERROR("ERROR::ASSIMP::", importer.GetErrorString());
         return;
     }
 
@@ -200,7 +207,13 @@ std::vector<Texture> Model::loadMaterialTextures(aiMaterial* mat, aiTextureType 
     return textures;
 }
 
-unsigned int Model::loadTextureFromFile(const char* path)
+void Model::draw(unsigned int shader_program)
+{
+    for (auto& m_meshe : m_meshes)
+        m_meshe.draw(shader_program);
+}
+
+unsigned int loadTextureFromFile(const char* path)
 {
     unsigned int texture_id;
     glGenTextures(1, &texture_id);
@@ -230,15 +243,9 @@ unsigned int Model::loadTextureFromFile(const char* path)
     }
     else
     {
-        std::cout << "Texture failed to load at path: " << path << std::endl;
+        LOG_ERROR("Texture failed to load at path", path);
         stbi_image_free(data);
     }
 
     return texture_id;
-}
-
-void Model::draw(unsigned int shader_program)
-{
-    for (auto& m_meshe : m_meshes)
-        m_meshe.draw(shader_program);
 }

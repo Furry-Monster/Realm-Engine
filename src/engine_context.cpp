@@ -1,8 +1,4 @@
 #include "engine_context.h"
-#include "input.h"
-#include "logger.h"
-#include "window.h"
-#include <memory>
 
 void Context::create()
 {
