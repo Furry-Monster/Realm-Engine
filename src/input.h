@@ -26,14 +26,14 @@ namespace RealmEngine
 
         void mouseCallback(double xpos, double ypos);
         void scrollCallback(double yoffset);
-        void keyboardCallback(int key, int action);
+        void stateToggleCallback(int key, int action);
         void movementCallback(int key, int action);
 
     private:
         Camera* m_camera {nullptr};
 
-        float m_lastX {320.0f};
-        float m_lastY {240.0f};
+        float m_last_mouse_x {320.0f};
+        float m_last_mouse_y {240.0f};
 
         bool  m_first_mouse {true};
         bool  m_mouse_captured {true};

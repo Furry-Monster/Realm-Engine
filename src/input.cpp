@@ -14,7 +14,7 @@ namespace RealmEngine
         g_context.m_window->registerOnCursorPosFunc([this](double xpos, double ypos) { mouseCallback(xpos, ypos); });
         g_context.m_window->registerOnScrollFunc([this](double /*xpos*/, double ypos) { scrollCallback(ypos); });
         g_context.m_window->registerOnKeyFunc(
-            [this](int key, int /*scancode*/, int action, int /*mods*/) { keyboardCallback(key, action); });
+            [this](int key, int /*scancode*/, int action, int /*mods*/) { stateToggleCallback(key, action); });
         g_context.m_window->registerOnKeyFunc(
             [this](int key, int /*scancode*/, int action, int /*mods*/) { movementCallback(key, action); });
 
@@ -32,36 +32,31 @@ namespace RealmEngine
 
         if (m_first_mouse)
         {
-            m_lastX       = xpos;
-            m_lastY       = ypos;
-            m_first_mouse = false;
+            m_last_mouse_x = xpos;
+            m_last_mouse_y = ypos;
+            m_first_mouse  = false;
         }
 
-        float xoffset = xpos - m_lastX;
-        float yoffset = m_lastY - ypos;
+        float xoffset = xpos - m_last_mouse_x;
+        float yoffset = m_last_mouse_y - ypos;
 
-        m_lastX = xpos;
-        m_lastY = ypos;
+        m_last_mouse_x = xpos;
+        m_last_mouse_y = ypos;
 
         m_camera->processMouseMovement(xoffset, yoffset);
     }
 
     void Input::scrollCallback(double yoffset)
     {
-        if (m_camera)
-        {
-            m_camera->processMouseScroll(yoffset);
-        }
+        if (!m_mouse_captured || !m_camera)
+            return;
+
+        m_camera->processMouseScroll(yoffset);
     }
 
-    void Input::keyboardCallback(int key, int action)
+    void Input::stateToggleCallback(int key, int action)
     {
         GLFWwindow* window = g_context.m_window->getGLFWwindow();
-
-        if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
-        {
-            glfwSetWindowShouldClose(window, GLFW_TRUE);
-        }
 
         if (key == GLFW_KEY_TAB && action == GLFW_PRESS)
         {
@@ -74,13 +69,13 @@ namespace RealmEngine
         if (!m_camera)
             return;
 
-        if (key == GLFW_KEY_W && action == GLFW_PRESS)
+        if (key == GLFW_KEY_W && (action == GLFW_PRESS || action == GLFW_REPEAT))
             m_camera->processKeyboard(FORWARD, m_delta_time);
-        if (key == GLFW_KEY_A && action == GLFW_PRESS)
+        if (key == GLFW_KEY_A && (action == GLFW_PRESS || action == GLFW_REPEAT))
             m_camera->processKeyboard(LEFT, m_delta_time);
-        if (key == GLFW_KEY_S && action == GLFW_PRESS)
+        if (key == GLFW_KEY_S && (action == GLFW_PRESS || action == GLFW_REPEAT))
             m_camera->processKeyboard(BACKWARD, m_delta_time);
-        if (key == GLFW_KEY_D && action == GLFW_PRESS)
+        if (key == GLFW_KEY_D && (action == GLFW_PRESS || action == GLFW_REPEAT))
             m_camera->processKeyboard(RIGHT, m_delta_time);
     }
 

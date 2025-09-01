@@ -49,11 +49,13 @@ namespace RealmEngine
         glfwSetScrollCallback(m_window, scrollCallback);
         glfwSetDropCallback(m_window, dropCallback);
         glfwSetWindowSizeCallback(m_window, windowSizeCallback);
+        glfwSetFramebufferSizeCallback(m_window, framebufferSizeCallback);
         glfwSetWindowCloseCallback(m_window, windowCloseCallback);
 
         // set frame buffer size
         glfwGetFramebufferSize(m_window, &m_framebuffer_width, &m_framebuffer_height);
         glViewport(0, 0, m_framebuffer_width, m_framebuffer_height);
+        registerOnFramebufferSizeFunc([this](int width, int height) { glViewport(0, 0, width, height); });
 
         // set title with API version
         const char* version = glfwGetVersionString();

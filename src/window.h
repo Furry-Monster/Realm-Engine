@@ -29,17 +29,18 @@ namespace RealmEngine
         int         getFramebufferWidth() const { return m_framebuffer_width; }
         int         getFramebufferHeight() const { return m_framebuffer_height; }
 
-        using onResetFunc       = std::function<void()>;
-        using onKeyFunc         = std::function<void(int, int, int, int)>;
-        using onCharFunc        = std::function<void(unsigned int)>;
-        using onCharModsFunc    = std::function<void(int, unsigned int)>;
-        using onMouseButtonFunc = std::function<void(int, int, int)>;
-        using onCursorPosFunc   = std::function<void(double, double)>;
-        using onCursorEnterFunc = std::function<void(int)>;
-        using onScrollFunc      = std::function<void(double, double)>;
-        using onDropFunc        = std::function<void(int, const char**)>;
-        using onWindowSizeFunc  = std::function<void(int, int)>;
-        using onWindowCloseFunc = std::function<void()>;
+        using onResetFunc           = std::function<void()>;
+        using onKeyFunc             = std::function<void(int, int, int, int)>;
+        using onCharFunc            = std::function<void(unsigned int)>;
+        using onCharModsFunc        = std::function<void(int, unsigned int)>;
+        using onMouseButtonFunc     = std::function<void(int, int, int)>;
+        using onCursorPosFunc       = std::function<void(double, double)>;
+        using onCursorEnterFunc     = std::function<void(int)>;
+        using onScrollFunc          = std::function<void(double, double)>;
+        using onDropFunc            = std::function<void(int, const char**)>;
+        using onWindowSizeFunc      = std::function<void(int, int)>;
+        using onFramebufferSizeFunc = std::function<void(int, int)>;
+        using onWindowCloseFunc     = std::function<void()>;
 
         void registerOnResetFunc(onResetFunc func) { m_onResetFunc.push_back(func); }
         void registerOnKeyFunc(onKeyFunc func) { m_onKeyFunc.push_back(func); }
@@ -51,6 +52,7 @@ namespace RealmEngine
         void registerOnScrollFunc(onScrollFunc func) { m_onScrollFunc.push_back(func); }
         void registerOnDropFunc(onDropFunc func) { m_onDropFunc.push_back(func); }
         void registerOnWindowSizeFunc(onWindowSizeFunc func) { m_onWindowSizeFunc.push_back(func); }
+        void registerOnFramebufferSizeFunc(onFramebufferSizeFunc func) { m_onFramebufferSizeFunc.push_back(func); }
         void registerOnWindowCloseFunc(onWindowCloseFunc func) { m_onWindowCloseFunc.push_back(func); }
 
     protected:
@@ -124,11 +126,30 @@ namespace RealmEngine
             Window* app = reinterpret_cast<Window*>(glfwGetWindowUserPointer(window));
             if (app)
             {
+                app->onWindowSize(width, height);
                 app->m_width  = width;
                 app->m_height = height;
             }
         }
-        static void windowCloseCallback(GLFWwindow* window) { glfwSetWindowShouldClose(window, true); }
+        static void framebufferSizeCallback(GLFWwindow* window, int width, int height)
+        {
+            Window* app = reinterpret_cast<Window*>(glfwGetWindowUserPointer(window));
+            if (app)
+            {
+                app->onFramebufferSize(width, height);
+                app->m_framebuffer_width  = width;
+                app->m_framebuffer_height = height;
+            }
+        }
+        static void windowCloseCallback(GLFWwindow* window)
+        {
+            Window* app = reinterpret_cast<Window*>(glfwGetWindowUserPointer(window));
+            if (app)
+            {
+                app->onWindowClose();
+                glfwSetWindowShouldClose(window, true);
+            }
+        }
 
         // event exec
         void onReset()
@@ -181,6 +202,16 @@ namespace RealmEngine
             for (auto& func : m_onWindowSizeFunc)
                 func(width, height);
         }
+        void onFramebufferSize(int width, int height)
+        {
+            for (auto& func : m_onFramebufferSizeFunc)
+                func(width, height);
+        }
+        void onWindowClose()
+        {
+            for (auto& func : m_onWindowCloseFunc)
+                func();
+        }
 
     private:
         // var below are given
@@ -193,16 +224,17 @@ namespace RealmEngine
         std::string m_title;
 
         // events
-        std::vector<onResetFunc>       m_onResetFunc;
-        std::vector<onKeyFunc>         m_onKeyFunc;
-        std::vector<onCharFunc>        m_onCharFunc;
-        std::vector<onCharModsFunc>    m_onCharModsFunc;
-        std::vector<onMouseButtonFunc> m_onMouseButtonFunc;
-        std::vector<onCursorPosFunc>   m_onCursorPosFunc;
-        std::vector<onCursorEnterFunc> m_onCursorEnterFunc;
-        std::vector<onScrollFunc>      m_onScrollFunc;
-        std::vector<onDropFunc>        m_onDropFunc;
-        std::vector<onWindowSizeFunc>  m_onWindowSizeFunc;
-        std::vector<onWindowCloseFunc> m_onWindowCloseFunc;
+        std::vector<onResetFunc>           m_onResetFunc;
+        std::vector<onKeyFunc>             m_onKeyFunc;
+        std::vector<onCharFunc>            m_onCharFunc;
+        std::vector<onCharModsFunc>        m_onCharModsFunc;
+        std::vector<onMouseButtonFunc>     m_onMouseButtonFunc;
+        std::vector<onCursorPosFunc>       m_onCursorPosFunc;
+        std::vector<onCursorEnterFunc>     m_onCursorEnterFunc;
+        std::vector<onScrollFunc>          m_onScrollFunc;
+        std::vector<onDropFunc>            m_onDropFunc;
+        std::vector<onWindowSizeFunc>      m_onWindowSizeFunc;
+        std::vector<onFramebufferSizeFunc> m_onFramebufferSizeFunc;
+        std::vector<onWindowCloseFunc>     m_onWindowCloseFunc;
     };
 } // namespace RealmEngine
