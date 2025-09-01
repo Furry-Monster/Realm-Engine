@@ -6,14 +6,15 @@ class Logger;
 class Input;
 class Window;
 
-class Context {
+class Context
+{
 public:
-  void create();
-  void destroy();
+    void create();
+    void destroy();
 
-  std::shared_ptr<Logger> m_logger;
-  std::shared_ptr<Input> m_input;
-  std::shared_ptr<Window> m_window;
+    std::shared_ptr<Logger> m_logger;
+    std::shared_ptr<Input>  m_input;
+    std::shared_ptr<Window> m_window;
 };
 
 extern Context g_context;

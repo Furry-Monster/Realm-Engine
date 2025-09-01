@@ -1,41 +1,37 @@
 #pragma once
 
-#define GLFW_INCLUDE_NONE
-#include <GLFW/glfw3.h>
-#include <glad/gl.h>
+#include "opengl_glfw.h"
 #include <string>
 
-class Window {
+class Window
+{
 public:
-  Window(int width, int height, const char *title);
-  ~Window();
+    Window(int width, int height, const char* title);
+    ~Window();
 
-  bool initialize();
-  void terminate();
+    bool initialize();
+    void terminate();
 
-  GLFWwindow *getGLFWwindow() { return m_window; }
-  bool shouldClose() { return glfwWindowShouldClose(m_window); }
-  void swapBuffers() { glfwSwapBuffers(m_window); }
-  void pollEvents() { glfwPollEvents(); }
+    GLFWwindow* getGLFWwindow() { return m_window; }
+    bool        shouldClose() { return glfwWindowShouldClose(m_window); }
+    void        swapBuffers() { glfwSwapBuffers(m_window); }
+    static void pollEvents() { glfwPollEvents(); }
 
-public:
-  int getWidth() const { return m_width; }
-  int getHeight() const { return m_height; }
-  int getFramebufferWidth() const { return m_framebuffer_width; }
-  int getFramebufferHeight() const { return m_framebuffer_height; }
+    int getWidth() const { return m_width; }
+    int getHeight() const { return m_height; }
+    int getFramebufferWidth() const { return m_framebuffer_width; }
+    int getFramebufferHeight() const { return m_framebuffer_height; }
 
-  void setTitle(const std::string &title);
+    void setTitle(const std::string& title);
 
 private:
-  GLFWwindow *m_window;
-  int m_width;
-  int m_height;
-  int m_framebuffer_width;
-  int m_framebuffer_height;
-  std::string m_title;
+    GLFWwindow* m_window;
+    int         m_width;
+    int         m_height;
+    int         m_framebuffer_width;
+    int         m_framebuffer_height;
+    std::string m_title;
 
-private:
-  static void windowSizeCallback(GLFWwindow *window, int width, int height);
-  static void framebufferSizeCallback(GLFWwindow *window, int width,
-                                      int height);
+    static void windowSizeCallback(GLFWwindow* window, int width, int height);
+    static void framebufferSizeCallback(GLFWwindow* window, int width, int height);
 };
