@@ -59,18 +59,8 @@ void Engine::boot() {
   // create context
   g_context.create();
 
-  // initialize window system
-  m_window = new Window(640, 480, "RealmEngine");
-  if (!m_window->initialize()) {
-    delete m_window;
-    return;
-  }
-
-  // initialize camera system
-  m_camera = new Camera(glm::vec3(0.0f, 0.0f, 5.0f));
-
   // initialize input system
-  Input::initialize(m_window->getGLFWwindow());
+  Input::initialize(g_context.m_window->getGLFWwindow());
   Input::setCamera(m_camera);
 
   // init imgui
@@ -80,7 +70,7 @@ void Engine::boot() {
   io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
   io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
 
-  ImGui_ImplGlfw_InitForOpenGL(m_window->getGLFWwindow(), GLFW_TRUE);
+  ImGui_ImplGlfw_InitForOpenGL(g_context.m_window->getGLFWwindow(), GLFW_TRUE);
   ImGui_ImplOpenGL3_Init();
 
   LOG_INFO("Boot Engine ...");
@@ -89,6 +79,8 @@ void Engine::boot() {
 void Engine::run() {
   // TODO: 分离render部分初始化
 
+  // initialize camera system
+  m_camera = new Camera(glm::vec3(0.0f, 0.0f, 5.0f));
   // load model
   m_model = new Model("../assets/model/backpack/backpack.obj");
   // load shader
@@ -96,7 +88,7 @@ void Engine::run() {
   // enable depth testing
   glEnable(GL_DEPTH_TEST);
 
-  while (!m_window->shouldClose()) {
+  while (!g_context.m_window->shouldClose()) {
     // update timing
     float currentFrame = glfwGetTime();
     m_delta_time = currentFrame - m_last_frame;
@@ -120,9 +112,9 @@ void Engine::terminate() {
   ImGui::DestroyContext();
 
   // terminate window
-  if (m_window) {
-    delete m_window;
-    m_window = nullptr;
+  if (g_context.m_window) {
+    g_context.m_window.reset();
+    g_context.m_window = nullptr;
   }
 
   // destroy context
@@ -136,9 +128,9 @@ void Engine::tick() {
 
 void Engine::logicalTick() {
   // event handling
-  m_window->pollEvents();
+  g_context.m_window->pollEvents();
   Input::setDeltaTime(m_delta_time);
-  Input::processKeyboard(m_window->getGLFWwindow());
+  Input::processKeyboard(g_context.m_window->getGLFWwindow());
 }
 
 void Engine::renderTick() {
@@ -159,9 +151,9 @@ void Engine::renderTick() {
   m_shader->use();
 
   // set matrices
-  glm::mat4 projection =
-      m_camera->getProjectionMatrix((float)m_window->getFramebufferWidth() /
-                                    (float)m_window->getFramebufferHeight());
+  glm::mat4 projection = m_camera->getProjectionMatrix(
+      (float)g_context.m_window->getFramebufferWidth() /
+      (float)g_context.m_window->getFramebufferHeight());
   glm::mat4 view = m_camera->getViewMatrix();
   glm::mat4 model = glm::mat4(1.0f);
   model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
@@ -188,17 +180,18 @@ void Engine::renderTick() {
   ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
   // buffering...
-  m_window->swapBuffers();
+  g_context.m_window->swapBuffers();
 }
 
 void Engine::drawDebugUI() {
   ImGui::Begin("Debug Info");
   ImGui::Text("Application average %.3f ms/frame (%.1f FPS)",
               1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-  ImGui::Text("Window size: %d x %d", m_window->getWidth(),
-              m_window->getHeight());
-  ImGui::Text("Framebuffer size: %d x %d", m_window->getFramebufferWidth(),
-              m_window->getFramebufferHeight());
+  ImGui::Text("Window size: %d x %d", g_context.m_window->getWidth(),
+              g_context.m_window->getHeight());
+  ImGui::Text("Framebuffer size: %d x %d",
+              g_context.m_window->getFramebufferWidth(),
+              g_context.m_window->getFramebufferHeight());
   ImGui::Text("OpenGL Version: %s", glfwGetVersionString());
 
   ImGui::Separator();
