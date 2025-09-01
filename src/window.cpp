@@ -16,11 +16,13 @@ namespace RealmEngine
             return false;
         }
 
-        glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+        glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);              // use opengl
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);                 // use ver 3.x
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);                 // use ver 3.3
+        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); // use core profile
+        glfwWindowHint(GLFW_SAMPLES, 4);                               // set MSAA sample nums
 
+        // create window
         m_window = glfwCreateWindow(m_width, m_height, m_title.c_str(), nullptr, nullptr);
         if (!m_window)
         {
@@ -28,6 +30,7 @@ namespace RealmEngine
             return false;
         }
         glfwMakeContextCurrent(m_window);
+        setVisible(false);
 
         // init glad
         if (!gladLoadGL(glfwGetProcAddress))
@@ -36,7 +39,8 @@ namespace RealmEngine
             glfwTerminate();
             return false;
         }
-        glfwSwapInterval(1);
+        glfwSwapInterval(1);      // use v-sync
+        glEnable(GL_MULTISAMPLE); // use MSAA
 
         // bind native window callbacks
         glfwSetWindowUserPointer(m_window, this);

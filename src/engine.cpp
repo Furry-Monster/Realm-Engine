@@ -7,19 +7,8 @@ namespace RealmEngine
     // NOLINTNEXTLINE(readability-convert-member-functions-to-static)
     void Engine::boot()
     {
-        // create context
         g_context.create();
-
-        // init imgui
-        IMGUI_CHECKVERSION();
-        ImGui::CreateContext();
-        ImGuiIO& io = ImGui::GetIO();
-        io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-        io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
-
-        ImGui_ImplGlfw_InitForOpenGL(g_context.m_window->getGLFWwindow(), GLFW_TRUE);
-        ImGui_ImplOpenGL3_Init();
-
+        g_context.m_window->setVisible(true);
         LOG_INFO("Boot Engine ...");
     }
 
@@ -28,8 +17,7 @@ namespace RealmEngine
         // initialize renderer
         m_renderer = new Renderer();
         m_renderer->initialize();
-
-        // initialize camera system
+        // initialize camera
         m_camera = new Camera(glm::vec3(0.0f, 0.0f, 5.0f));
         g_context.m_input->setCamera(m_camera);
         // load model
@@ -58,13 +46,6 @@ namespace RealmEngine
     void Engine::terminate()
     {
         LOG_INFO("Terminate Engine ...");
-
-        // clean imgui
-        ImGui_ImplOpenGL3_Shutdown();
-        ImGui_ImplGlfw_Shutdown();
-        ImGui::DestroyContext();
-
-        // destroy context
         g_context.destroy();
     }
 

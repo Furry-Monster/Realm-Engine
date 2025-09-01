@@ -13,16 +13,15 @@ namespace RealmEngine
     class Shader;
     class Camera;
 
-    struct RasterizationState
+    static struct RasterizationState
     {
         GLenum polygon_mode      = GL_FILL;
         bool   enable_depth_test = true;
         bool   enable_culling    = false;
         GLenum cull_face         = GL_BACK;
-        bool   enable_wireframe  = false;
         float  line_width        = 1.0f;
         float  point_size        = 1.0f;
-    };
+    } m_raster_state = {GL_FILL, true, false, GL_BACK, 1.0f, 1.0f};
 
     class Renderer
     {

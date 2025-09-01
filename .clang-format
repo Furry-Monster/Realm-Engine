@@ -16,7 +16,7 @@ AlwaysBreakAfterDefinitionReturnType: None
 AlwaysBreakAfterReturnType: None
 AlwaysBreakBeforeMultilineStrings: false
 AlwaysBreakTemplateDeclarations: 'Yes'
-BasedOnStyle: Google
+BasedOnStyle: Mozilla
 BinPackArguments: false
 BinPackParameters: false
 BraceWrapping:

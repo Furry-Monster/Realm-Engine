@@ -6,7 +6,7 @@
 
 namespace RealmEngine
 {
-    Renderer::Renderer() { m_raster_state = {GL_FILL, true, false, GL_BACK, false, 1.0f, 1.0f}; }
+    Renderer::Renderer() = default;
 
     Renderer::~Renderer()
     {

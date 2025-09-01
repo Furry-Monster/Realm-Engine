@@ -19,11 +19,13 @@ namespace RealmEngine
         bool initialize();
         void terminate();
 
-        bool        shouldClose() { return glfwWindowShouldClose(m_window); }
-        void        swapBuffers() { glfwSwapBuffers(m_window); }
-        static void pollEvents() { glfwPollEvents(); }
+        void setVisible(bool visible) { (m_visible = visible) ? glfwShowWindow(m_window) : glfwHideWindow(m_window); }
+        bool shouldClose() { return glfwWindowShouldClose(m_window); }
+        void swapBuffers() { glfwSwapBuffers(m_window); }
+        void pollEvents() { glfwPollEvents(); }
 
-        GLFWwindow* getGLFWwindow() { return m_window; }
+        GLFWwindow* getGLFWwindow() const { return m_window; }
+        std::string getTitle() const { return m_title; }
         int         getWidth() const { return m_width; }
         int         getHeight() const { return m_height; }
         int         getFramebufferWidth() const { return m_framebuffer_width; }
@@ -214,14 +216,14 @@ namespace RealmEngine
         }
 
     private:
-        // var below are given
         GLFWwindow* m_window {nullptr};
         int         m_width {0};
         int         m_height {0};
-        // var below are detected
+
+        std::string m_title;
         int         m_framebuffer_width {0};
         int         m_framebuffer_height {0};
-        std::string m_title;
+        bool        m_visible {false};
 
         // events
         std::vector<onResetFunc>           m_onResetFunc;
