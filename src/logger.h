@@ -2,9 +2,9 @@
 
 #include <cstdint>
 #include <memory>
+#include <stdexcept>
 
 #include <spdlog/logger.h>
-#include <stdexcept>
 
 #define LOG_HELPER(LOG_LEVEL, ...) \
     g_context.m_logger->log(LOG_LEVEL, "[" + std::string(__FUNCTION__) + "] " + __VA_ARGS__)

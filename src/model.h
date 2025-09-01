@@ -2,7 +2,9 @@
 
 #include <assimp/material.h>
 #include <assimp/scene.h>
+
 #include <glm/glm.hpp>
+
 #include <string>
 #include <vector>
 

@@ -1,6 +1,7 @@
 #include "logger.h"
 
 #include <memory>
+
 #include <spdlog/async.h>
 #include <spdlog/async_logger.h>
 #include <spdlog/common.h>

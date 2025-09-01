@@ -6,10 +6,11 @@
 
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
+
+#define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
 #include "engine_context.h"
-#include "logger.h"
 
 unsigned int loadTextureFromFile(const char* path);
 
