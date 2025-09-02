@@ -83,8 +83,6 @@ namespace RealmEngine
                                           static_cast<float>(g_context.m_window->getFramebufferHeight()));
         glm::mat4 view  = m_camera->getViewMatrix();
         glm::mat4 model = glm::mat4(1.0f);
-        model           = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
-        model           = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));
 
         // set lighting
         glm::vec3 light_pos(1.2f, 1.0f, 2.0f);

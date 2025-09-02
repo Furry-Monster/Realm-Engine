@@ -6,9 +6,9 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <memory>
 
 #include "render/pipeline.h"
-#include <memory>
 
 namespace RealmEngine
 {
