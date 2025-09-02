@@ -37,16 +37,21 @@ namespace RealmEngine
         void initialize();
         void terminate();
 
+        GLuint getCurrentVAO() const { return m_binding_cache.current_vao; }
+        bool   isUBOBound(GLuint binding_point) const { return m_binding_cache.bound_ubos[binding_point] != 0; }
+        bool   isTextureBound(GLuint unit) const { return m_binding_cache.bound_textures[unit] != 0; }
+
         void pushState(const State& state);
         void popState();
         void applyState(const State& state);
 
         void bindTexture(int unit, GLuint texture, GLenum target = GL_TEXTURE_2D);
-        void unbindTexture(int unit);
-        void unbindAllTexture();
-
         void bindUBO(GLuint buffer, int binding_point);
         void bindVAO(GLuint vao);
+
+        void unbindAllTexture();
+        void unbindAllUBOs();
+        void unbindVAO();
 
     private:
         struct BindingCache
