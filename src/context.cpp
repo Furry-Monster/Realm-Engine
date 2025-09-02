@@ -1,9 +1,5 @@
 #include "context.h"
 
-#include <imgui.h>
-#include <imgui_impl_glfw.h>
-#include <imgui_impl_opengl3.h>
-
 namespace RealmEngine
 {
     void Context::create()
@@ -19,31 +15,17 @@ namespace RealmEngine
             return;
         }
 
-        // // initialize rendering system
-        // m_renderer = std::make_shared<Renderer>();
-        // m_renderer->initialize();
+        // initialize rendering system
+        m_renderer = std::make_shared<Renderer>();
+        m_renderer->initialize();
 
         // initialize input system
         m_input = std::make_shared<Input>();
         m_input->initialize();
-
-        // initialize imgui
-        IMGUI_CHECKVERSION();
-        ImGui::CreateContext();
-        ImGuiIO& io = ImGui::GetIO();
-        io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-        io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
-
-        ImGui_ImplGlfw_InitForOpenGL(g_context.m_window->getGLFWwindow(), GLFW_TRUE);
-        ImGui_ImplOpenGL3_Init();
     }
 
     void Context::destroy()
     {
-        // clean imgui
-        ImGui_ImplOpenGL3_Shutdown();
-        ImGui_ImplGlfw_Shutdown();
-        ImGui::DestroyContext();
 
         // reset ptrs
         m_input.reset();

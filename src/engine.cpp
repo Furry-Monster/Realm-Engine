@@ -13,9 +13,6 @@ namespace RealmEngine
 
     void Engine::run()
     {
-        // initialize renderer
-        m_renderer = new Renderer();
-        m_renderer->initialize();
         // initialize camera
         m_camera = new Camera(glm::vec3(0.0f, 0.0f, 5.0f));
         g_context.m_input->setCamera(m_camera);
@@ -38,7 +35,6 @@ namespace RealmEngine
         delete m_shader;
         delete m_model;
         delete m_camera;
-        delete m_renderer;
     }
 
     // NOLINTNEXTLINE(readability-convert-member-functions-to-static)
@@ -71,11 +67,11 @@ namespace RealmEngine
         drawDebugUI();
 
         // begin frame
-        m_renderer->beginFrame();
-        m_renderer->clear();
+        g_context.m_renderer->beginFrame();
+        g_context.m_renderer->clear();
 
         // apply rasterization state
-        m_renderer->applyRendererState();
+        g_context.m_renderer->applyRendererState();
 
         // set matrices
         glm::mat4 projection =
@@ -87,16 +83,43 @@ namespace RealmEngine
         // set lighting
         glm::vec3 light_pos(1.2f, 1.0f, 2.0f);
         glm::vec3 light_color(1.0f, 1.0f, 1.0f);
-        m_renderer->setLighting(m_shader, light_pos, light_color, m_camera->m_position);
+        g_context.m_renderer->setLighting(m_shader, light_pos, light_color, m_camera->m_position);
 
         // render model
         if (m_model)
         {
-            m_renderer->render(m_model, m_shader, model, view, projection);
+            g_context.m_renderer->render(m_model, m_shader, model, view, projection);
         }
 
         // end frame
-        m_renderer->endFrame();
+        g_context.m_renderer->endFrame();
+
+        // // 设置相机矩阵
+        // glm::mat4 projection =
+        //     m_camera->getProjectionMatrix(static_cast<float>(g_context.m_window->getFramebufferWidth()) /
+        //                                   static_cast<float>(g_context.m_window->getFramebufferHeight()));
+        // glm::mat4 view       = m_camera->getViewMatrix();
+        // glm::vec3 camera_pos = m_camera->m_position;
+
+        // m_renderer->setCamera(view, projection, camera_pos);
+
+        // // 添加光源
+        // m_renderer->addDirectionalLight(glm::vec3(0.2f, -1.0f, 0.3f), // 方向
+        //                                 glm::vec3(1.0f, 0.9f, 0.8f),  // 颜色
+        //                                 2.0f                          // 强度
+        // );
+
+        // m_renderer->addPointLight(glm::vec3(2.0f, 3.0f, 1.0f), // 位置
+        //                           glm::vec3(1.0f, 0.5f, 0.2f), // 颜色
+        //                           5.0f                         // 强度
+        // );
+
+        // // 添加模型
+        // glm::mat4 model_matrix = glm::mat4(1.0f);
+        // m_renderer->addRenderObject(m_model, model_matrix);
+
+        // // 渲染整帧
+        // m_renderer->renderFrame();
 
         // ui
         ImGui::Render();
@@ -123,7 +146,7 @@ namespace RealmEngine
         ImGui::Text("Rasterization Controls:");
 
         // renderer info
-        Renderer::State& renderer_state = m_renderer->getRendererState();
+        Renderer::State& renderer_state = g_context.m_renderer->getRendererState();
 
         const char* polygon_modes[] = {"Fill", "Line", "Point"};
         int         current_mode    = (renderer_state.polygon_mode == GL_FILL) ? 0 :

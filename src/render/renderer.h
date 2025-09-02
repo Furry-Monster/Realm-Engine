@@ -63,6 +63,13 @@ namespace RealmEngine
                          const glm::vec3& view_pos);
         void setRenderMode(RenderMode mode) { m_mode = mode; };
 
+        // Deferred rendering interface
+        void addRenderObject(Model* model, const glm::mat4& model_matrix);
+        void addDirectionalLight(const glm::vec3& direction, const glm::vec3& color, float intensity = 1.0f);
+        void addPointLight(const glm::vec3& position, const glm::vec3& color, float intensity = 1.0f);
+        void setCamera(const glm::mat4& view, const glm::mat4& projection, const glm::vec3& position);
+        void renderFrame();
+
     private:
         std::unique_ptr<Pipeline>           m_pipeline;
         std::unique_ptr<StateManager>       m_state_mgr;

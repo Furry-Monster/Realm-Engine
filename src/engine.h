@@ -15,10 +15,10 @@
 #include <cmath>
 #include <cstring>
 
-#include "resource/camera.h"
-#include "resource/model.h"
 #include "render/renderer.h"
 #include "render/shader.h"
+#include "resource/camera.h"
+#include "resource/model.h"
 
 namespace RealmEngine
 {
@@ -39,10 +39,9 @@ namespace RealmEngine
         float m_last_frame {0.0f};
 
         // temp var , removed latter(added to rendering system)
-        Camera*   m_camera {nullptr};
-        Model*    m_model {nullptr};
-        Shader*   m_shader {nullptr};
-        Renderer* m_renderer {nullptr};
+        Camera* m_camera {nullptr};
+        Model*  m_model {nullptr};
+        Shader* m_shader {nullptr};
 
         void drawDebugUI();
     };
