@@ -20,16 +20,16 @@ namespace RealmEngine
         return glm::perspective(glm::radians(m_zoom), aspect, 0.1f, 100.0f);
     }
 
-    void Camera::processKeyboard(CameraMovement direction, float deltaTime)
+    void Camera::processKeyboard(Camera::Movement direction, float deltaTime)
     {
         float velocity = m_movement_speed * deltaTime;
-        if (direction == FORWARD)
+        if (direction == Camera::Movement::FORWARD)
             m_position += m_front * velocity;
-        if (direction == BACKWARD)
+        if (direction == Camera::Movement::BACKWARD)
             m_position -= m_front * velocity;
-        if (direction == LEFT)
+        if (direction == Camera::Movement::LEFT)
             m_position -= m_right * velocity;
-        if (direction == RIGHT)
+        if (direction == Camera::Movement::RIGHT)
             m_position += m_right * velocity;
     }
 

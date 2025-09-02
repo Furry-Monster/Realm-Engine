@@ -1,6 +1,4 @@
 #include "input.h"
-#include "GLFW/glfw3.h"
-#include "camera.h"
 #include "engine_context.h"
 
 namespace RealmEngine
@@ -70,13 +68,13 @@ namespace RealmEngine
             return;
 
         if (key == GLFW_KEY_W && (action == GLFW_PRESS || action == GLFW_REPEAT))
-            m_camera->processKeyboard(FORWARD, m_delta_time);
+            m_camera->processKeyboard(Camera::Movement::FORWARD, m_delta_time);
         if (key == GLFW_KEY_A && (action == GLFW_PRESS || action == GLFW_REPEAT))
-            m_camera->processKeyboard(LEFT, m_delta_time);
+            m_camera->processKeyboard(Camera::Movement::LEFT, m_delta_time);
         if (key == GLFW_KEY_S && (action == GLFW_PRESS || action == GLFW_REPEAT))
-            m_camera->processKeyboard(BACKWARD, m_delta_time);
+            m_camera->processKeyboard(Camera::Movement::BACKWARD, m_delta_time);
         if (key == GLFW_KEY_D && (action == GLFW_PRESS || action == GLFW_REPEAT))
-            m_camera->processKeyboard(RIGHT, m_delta_time);
+            m_camera->processKeyboard(Camera::Movement::RIGHT, m_delta_time);
     }
 
     void Input::toggleMouseCapture()

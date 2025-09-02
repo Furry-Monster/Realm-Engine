@@ -1,17 +1,11 @@
 #pragma once
 
+#include <cstdint>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
 namespace RealmEngine
 {
-    enum CameraMovement
-    {
-        FORWARD,
-        BACKWARD,
-        LEFT,
-        RIGHT,
-    };
 
     static struct CameraInfo
     {
@@ -25,6 +19,14 @@ namespace RealmEngine
     class Camera
     {
     public:
+        enum class Movement : uint8_t
+        {
+            FORWARD,
+            BACKWARD,
+            LEFT,
+            RIGHT,
+        };
+
         glm::vec3 m_position;
         glm::vec3 m_front;
         glm::vec3 m_up;
@@ -46,7 +48,7 @@ namespace RealmEngine
         glm::mat4 getViewMatrix() const;
         glm::mat4 getProjectionMatrix(float aspect) const;
 
-        void processKeyboard(CameraMovement direction, float deltaTime);
+        void processKeyboard(Movement direction, float deltaTime);
         void processMouseMovement(float xoffset, float yoffset, bool constrainPitch = true);
         void processMouseScroll(float yoffset);
 
