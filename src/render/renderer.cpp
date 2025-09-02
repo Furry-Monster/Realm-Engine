@@ -109,7 +109,7 @@ namespace RealmEngine
         shader->setMat4("view", view_matrix);
         shader->setMat4("model", model_matrix);
 
-        model->draw(shader->id);
+        model->draw(shader->getShaderProgram());
     }
 
     void Renderer::setLighting(Shader*          shader,

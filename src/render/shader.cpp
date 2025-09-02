@@ -30,63 +30,59 @@ namespace RealmEngine
         glCompileShader(fragment);
         checkCompileErrors(fragment, "FRAGMENT");
 
-        id = glCreateProgram();
-        glAttachShader(id, vertex);
-        glAttachShader(id, fragment);
-        glLinkProgram(id);
-        checkCompileErrors(id, "PROGRAM");
+        m_program = glCreateProgram();
+        glAttachShader(m_program, vertex);
+        glAttachShader(m_program, fragment);
+        glLinkProgram(m_program);
+        checkCompileErrors(m_program, "PROGRAM");
 
         glDeleteShader(vertex);
         glDeleteShader(fragment);
     }
 
-    Shader::~Shader() { glDeleteProgram(id); }
+    Shader::~Shader() { glDeleteProgram(m_program); }
 
-    void Shader::use() const { glUseProgram(id); }
+    void Shader::use() const { glUseProgram(m_program); }
 
-    void Shader::setBool(const std::string& name, bool value) const
+    unsigned int Shader::getShaderProgram() const { return m_program; }
+
+    void Shader::setBool(const std::string& name, bool value)
     {
-        glUniform1i(glGetUniformLocation(id, name.c_str()), static_cast<int>(value));
+        glUniform1i(getUniformLocation(name), static_cast<int>(value));
     }
 
-    void Shader::setInt(const std::string& name, int value) const
+    void Shader::setInt(const std::string& name, int value) { glUniform1i(getUniformLocation(name), value); }
+
+    void Shader::setFloat(const std::string& name, float value) { glUniform1f(getUniformLocation(name), value); }
+
+    void Shader::setVec2(const std::string& name, const glm::vec2& value)
     {
-        glUniform1i(glGetUniformLocation(id, name.c_str()), value);
+        glUniform2fv(getUniformLocation(name), 1, &value[0]);
     }
 
-    void Shader::setFloat(const std::string& name, float value) const
+    void Shader::setVec3(const std::string& name, const glm::vec3& value)
     {
-        glUniform1f(glGetUniformLocation(id, name.c_str()), value);
+        glUniform3fv(getUniformLocation(name), 1, &value[0]);
     }
 
-    void Shader::setVec2(const std::string& name, const glm::vec2& value) const
+    void Shader::setVec4(const std::string& name, const glm::vec4& value)
     {
-        glUniform2fv(glGetUniformLocation(id, name.c_str()), 1, &value[0]);
+        glUniform4fv(getUniformLocation(name), 1, &value[0]);
     }
 
-    void Shader::setVec3(const std::string& name, const glm::vec3& value) const
+    void Shader::setMat2(const std::string& name, const glm::mat2& mat)
     {
-        glUniform3fv(glGetUniformLocation(id, name.c_str()), 1, &value[0]);
+        glUniformMatrix2fv(getUniformLocation(name), 1, GL_FALSE, &mat[0][0]);
     }
 
-    void Shader::setVec4(const std::string& name, const glm::vec4& value) const
+    void Shader::setMat3(const std::string& name, const glm::mat3& mat)
     {
-        glUniform4fv(glGetUniformLocation(id, name.c_str()), 1, &value[0]);
+        glUniformMatrix3fv(getUniformLocation(name), 1, GL_FALSE, &mat[0][0]);
     }
 
-    void Shader::setMat2(const std::string& name, const glm::mat2& mat) const
+    void Shader::setMat4(const std::string& name, const glm::mat4& mat)
     {
-        glUniformMatrix2fv(glGetUniformLocation(id, name.c_str()), 1, GL_FALSE, &mat[0][0]);
-    }
-
-    void Shader::setMat3(const std::string& name, const glm::mat3& mat) const
-    {
-        glUniformMatrix3fv(glGetUniformLocation(id, name.c_str()), 1, GL_FALSE, &mat[0][0]);
-    }
-
-    void Shader::setMat4(const std::string& name, const glm::mat4& mat) const
-    {
-        glUniformMatrix4fv(glGetUniformLocation(id, name.c_str()), 1, GL_FALSE, &mat[0][0]);
+        glUniformMatrix4fv(getUniformLocation(name), 1, GL_FALSE, &mat[0][0]);
     }
 
     void Shader::checkCompileErrors(unsigned int shader, const std::string& type)
@@ -120,5 +116,16 @@ namespace RealmEngine
         shader_stream << shader_file.rdbuf();
         shader_file.close();
         return shader_stream.str();
+    }
+
+    int Shader::getUniformLocation(const std::string& name)
+    {
+        auto it = m_uniform_cache.find(name);
+        if (it != m_uniform_cache.end())
+            return it->second;
+
+        int location          = glGetUniformLocation(m_program, name.c_str());
+        m_uniform_cache[name] = location;
+        return location;
     }
 } // namespace RealmEngine
