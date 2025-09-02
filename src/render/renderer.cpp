@@ -1,7 +1,10 @@
 #include "renderer.h"
 #include "context.h"
+#include "render/framebuffer.h"
 #include "resource/model.h"
 #include "shader.h"
+
+#include <memory>
 
 namespace RealmEngine
 {
@@ -12,6 +15,10 @@ namespace RealmEngine
             LOG_WARN("Renderer already initialized");
             return;
         }
+
+        // m_pipeline = std::make_unique<DefferdPipeline>();
+        m_state_mgr       = std::make_unique<StateManager>();
+        m_framebuffer_mgr = std::make_unique<FramebufferManager>();
 
         applyRendererState();
 

@@ -8,7 +8,9 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <memory>
 
+#include "render/framebuffer.h"
 #include "render/pipeline.h"
+#include "render/state.h"
 
 namespace RealmEngine
 {
@@ -62,7 +64,9 @@ namespace RealmEngine
         void setRenderMode(RenderMode mode) { m_mode = mode; };
 
     private:
-        std::unique_ptr<Pipeline> m_pipeline;
+        std::unique_ptr<Pipeline>           m_pipeline;
+        std::unique_ptr<StateManager>       m_state_mgr;
+        std::unique_ptr<FramebufferManager> m_framebuffer_mgr;
 
         bool m_initialized = false;
 
