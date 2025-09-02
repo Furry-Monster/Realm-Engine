@@ -22,7 +22,7 @@ namespace RealmEngine
         // load model
         m_model = new Model("../assets/model/backpack/backpack.obj");
         // load shader
-        m_shader = new Shader("../shader/test.vert", "../shader/test.frag");
+        m_shader = new Shader("../shader/default_raster.vert", "../shader/default_raster.frag");
 
         while (!g_context.m_window->shouldClose())
         {
