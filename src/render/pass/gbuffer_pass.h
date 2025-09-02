@@ -4,6 +4,6 @@
 
 namespace RealmEngine
 {
-    class PostProcessingPass : public RenderPass
+    class GBufferPass : public RenderPass
     {};
 } // namespace RealmEngine

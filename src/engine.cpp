@@ -75,7 +75,7 @@ namespace RealmEngine
         m_renderer->clear();
 
         // apply rasterization state
-        m_renderer->applyRasterizationState();
+        m_renderer->applyRendererState();
 
         // set matrices
         glm::mat4 projection =
@@ -110,6 +110,7 @@ namespace RealmEngine
 
     void Engine::drawDebugUI()
     {
+        // general info
         ImGui::Begin("Debug Info");
         ImGui::Text("Application average %.3f ms/frame (%.1f FPS)",
                     1000.0f / ImGui::GetIO().Framerate,
@@ -123,32 +124,39 @@ namespace RealmEngine
         ImGui::Separator();
         ImGui::Text("Rasterization Controls:");
 
-        RasterizationState& raster_state = m_renderer->getRasterizationState();
+        // renderer info
+        Renderer::State& renderer_state = m_renderer->getRendererState();
 
         const char* polygon_modes[] = {"Fill", "Line", "Point"};
-        int current_mode = (raster_state.polygon_mode == GL_FILL) ? 0 : (raster_state.polygon_mode == GL_LINE) ? 1 : 2;
+        int         current_mode    = (renderer_state.polygon_mode == GL_FILL) ? 0 :
+                                      (renderer_state.polygon_mode == GL_LINE) ? 1 :
+                                                                                 2;
         if (ImGui::Combo("Polygon Mode", &current_mode, polygon_modes, 3))
         {
-            raster_state.polygon_mode = (current_mode == 0) ? GL_FILL : (current_mode == 1) ? GL_LINE : GL_POINT;
+            renderer_state.polygon_mode = (current_mode == 0) ? GL_FILL : (current_mode == 1) ? GL_LINE : GL_POINT;
         }
+        ImGui::SliderFloat("Line Width", &renderer_state.line_width, 0.1f, 10.0f);
+        ImGui::SliderFloat("Point Size", &renderer_state.point_size, 1.0f, 20.0f);
 
-        ImGui::Checkbox("Enable Depth Test", &raster_state.enable_depth_test);
-        ImGui::Checkbox("Enable Face Culling", &raster_state.enable_culling);
+        ImGui::Checkbox("Enable Depth Test", &renderer_state.enable_depth_test);
+        ImGui::Checkbox("Enable Face Culling", &renderer_state.enable_culling);
 
-        if (raster_state.enable_culling)
+        if (renderer_state.enable_culling)
         {
             const char* cull_modes[] = {"Back", "Front", "Front and Back"};
-            int current_cull = (raster_state.cull_face == GL_BACK) ? 0 : (raster_state.cull_face == GL_FRONT) ? 1 : 2;
+            int         current_cull = (renderer_state.cull_face == GL_BACK)  ? 0 :
+                                       (renderer_state.cull_face == GL_FRONT) ? 1 :
+                                                                                2;
             if (ImGui::Combo("Cull Face", &current_cull, cull_modes, 3))
             {
-                raster_state.cull_face = (current_cull == 0) ? GL_BACK :
-                                         (current_cull == 1) ? GL_FRONT :
-                                                               GL_FRONT_AND_BACK;
+                renderer_state.cull_face = (current_cull == 0) ? GL_BACK :
+                                           (current_cull == 1) ? GL_FRONT :
+                                                                 GL_FRONT_AND_BACK;
             }
         }
 
-        ImGui::SliderFloat("Line Width", &raster_state.line_width, 0.1f, 10.0f);
-        ImGui::SliderFloat("Point Size", &raster_state.point_size, 1.0f, 20.0f);
+        ImGui::SliderInt("V-Sync Interval", &renderer_state.v_sync_interval, 0, 2);
+        ImGui::Checkbox("Enable MSAA", &renderer_state.enable_msaa);
 
         ImGui::Separator();
         ImGui::Text("Camera Controls:");

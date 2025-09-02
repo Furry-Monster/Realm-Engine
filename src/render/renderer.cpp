@@ -5,16 +5,6 @@
 
 namespace RealmEngine
 {
-    Renderer::Renderer() = default;
-
-    Renderer::~Renderer()
-    {
-        if (m_initialized)
-        {
-            terminate();
-        }
-    }
-
     void Renderer::initialize()
     {
         if (m_initialized)
@@ -23,8 +13,7 @@ namespace RealmEngine
             return;
         }
 
-        glEnable(GL_DEPTH_TEST);
-        glDepthFunc(GL_LESS);
+        applyRendererState();
 
         m_initialized = true;
         LOG_INFO("Renderer initialized");
@@ -66,9 +55,9 @@ namespace RealmEngine
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     }
 
-    void Renderer::applyRasterizationState() const
+    void Renderer::applyRendererState() const
     {
-        if (m_raster_state.enable_depth_test)
+        if (m_renderer_state.enable_depth_test)
         {
             glEnable(GL_DEPTH_TEST);
             glDepthFunc(GL_LESS);
@@ -78,10 +67,10 @@ namespace RealmEngine
             glDisable(GL_DEPTH_TEST);
         }
 
-        if (m_raster_state.enable_culling)
+        if (m_renderer_state.enable_culling)
         {
             glEnable(GL_CULL_FACE);
-            glCullFace(m_raster_state.cull_face);
+            glCullFace(m_renderer_state.cull_face);
             glFrontFace(GL_CCW);
         }
         else
@@ -89,9 +78,20 @@ namespace RealmEngine
             glDisable(GL_CULL_FACE);
         }
 
-        glPolygonMode(GL_FRONT_AND_BACK, m_raster_state.polygon_mode);
-        glLineWidth(m_raster_state.line_width);
-        glPointSize(m_raster_state.point_size);
+        glfwSwapInterval(m_renderer_state.v_sync_interval);
+
+        if (m_renderer_state.enable_msaa)
+        {
+            glEnable(GL_MULTISAMPLE);
+        }
+        else
+        {
+            glDisable(GL_MULTISAMPLE);
+        }
+
+        glPolygonMode(GL_FRONT_AND_BACK, m_renderer_state.polygon_mode);
+        glLineWidth(m_renderer_state.line_width);
+        glPointSize(m_renderer_state.point_size);
     }
 
     void Renderer::renderModel(Model*           model,

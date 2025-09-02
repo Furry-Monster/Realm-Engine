@@ -1,5 +1,9 @@
 #pragma once
 
-namespace RealmEngine{
+#include "render/pass.h"
 
-}
+namespace RealmEngine
+{
+    class ShadownPass : public RenderPass
+    {};
+} // namespace RealmEngine
