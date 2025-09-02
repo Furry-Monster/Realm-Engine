@@ -40,65 +40,11 @@ namespace RealmEngine
         }
     }
 
-    void Renderer::endFrame() const
-    {
-        if (!m_initialized)
-        {
-            LOG_ERROR("Renderer not initialized");
-            return;
-        }
-    }
-
-    void Renderer::clear(const glm::vec4& color)
-    {
-        glClearColor(color.r, color.g, color.b, color.a);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    }
-
-    void Renderer::applyRendererState() const
-    {
-        if (m_renderer_state.enable_depth_test)
-        {
-            glEnable(GL_DEPTH_TEST);
-            glDepthFunc(GL_LESS);
-        }
-        else
-        {
-            glDisable(GL_DEPTH_TEST);
-        }
-
-        if (m_renderer_state.enable_culling)
-        {
-            glEnable(GL_CULL_FACE);
-            glCullFace(m_renderer_state.cull_face);
-            glFrontFace(GL_CCW);
-        }
-        else
-        {
-            glDisable(GL_CULL_FACE);
-        }
-
-        glfwSwapInterval(m_renderer_state.v_sync_interval);
-
-        if (m_renderer_state.enable_msaa)
-        {
-            glEnable(GL_MULTISAMPLE);
-        }
-        else
-        {
-            glDisable(GL_MULTISAMPLE);
-        }
-
-        glPolygonMode(GL_FRONT_AND_BACK, m_renderer_state.polygon_mode);
-        glLineWidth(m_renderer_state.line_width);
-        glPointSize(m_renderer_state.point_size);
-    }
-
-    void Renderer::renderModel(Model*           model,
-                               Shader*          shader,
-                               const glm::mat4& model_matrix,
-                               const glm::mat4& view_matrix,
-                               const glm::mat4& projection_matrix)
+    void Renderer::render(Model*           model,
+                          Shader*          shader,
+                          const glm::mat4& model_matrix,
+                          const glm::mat4& view_matrix,
+                          const glm::mat4& projection_matrix)
     {
         if (!model || !shader)
             return;
@@ -110,6 +56,60 @@ namespace RealmEngine
         shader->setMat4("model", model_matrix);
 
         model->draw(shader->getShaderProgram());
+    }
+
+    void Renderer::clear(const glm::vec4& color)
+    {
+        glClearColor(color.r, color.g, color.b, color.a);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    }
+
+    void Renderer::endFrame() const
+    {
+        if (!m_initialized)
+        {
+            LOG_ERROR("Renderer not initialized");
+            return;
+        }
+    }
+
+    void Renderer::applyRendererState() const
+    {
+        if (m_state.enable_depth_test)
+        {
+            glEnable(GL_DEPTH_TEST);
+            glDepthFunc(GL_LESS);
+        }
+        else
+        {
+            glDisable(GL_DEPTH_TEST);
+        }
+
+        if (m_state.enable_culling)
+        {
+            glEnable(GL_CULL_FACE);
+            glCullFace(m_state.cull_face);
+            glFrontFace(GL_CCW);
+        }
+        else
+        {
+            glDisable(GL_CULL_FACE);
+        }
+
+        glfwSwapInterval(m_state.v_sync_interval);
+
+        if (m_state.enable_msaa)
+        {
+            glEnable(GL_MULTISAMPLE);
+        }
+        else
+        {
+            glDisable(GL_MULTISAMPLE);
+        }
+
+        glPolygonMode(GL_FRONT_AND_BACK, m_state.polygon_mode);
+        glLineWidth(m_state.line_width);
+        glPointSize(m_state.point_size);
     }
 
     void Renderer::setLighting(Shader*          shader,

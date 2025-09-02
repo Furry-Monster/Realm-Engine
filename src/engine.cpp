@@ -94,7 +94,7 @@ namespace RealmEngine
         // render model
         if (m_model)
         {
-            m_renderer->renderModel(m_model, m_shader, model, view, projection);
+            m_renderer->render(m_model, m_shader, model, view, projection);
         }
 
         // end frame
