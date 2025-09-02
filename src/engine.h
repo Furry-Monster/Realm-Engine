@@ -15,10 +15,10 @@
 #include <cmath>
 #include <cstring>
 
-#include "camera.h"
-#include "model.h"
-#include "renderer.h"
-#include "shader.h"
+#include "resource/camera.h"
+#include "resource/model.h"
+#include "render/renderer.h"
+#include "render/shader.h"
 
 namespace RealmEngine
 {

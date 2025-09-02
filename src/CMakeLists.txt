@@ -1,7 +1,7 @@
 set(TARGET_NAME RealmEngine)
 
-file(GLOB SOURCES "*.cpp" "*.c")
-file(GLOB HEADERS "*.hpp" "*.h")
+file(GLOB_RECURSE SOURCES "*.cpp" "*.c")
+file(GLOB_RECURSE HEADERS "*.hpp" "*.h")
 
 if(SOURCES)
     add_executable(${TARGET_NAME} ${SOURCES} ${HEADERS})

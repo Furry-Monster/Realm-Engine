@@ -1,10 +1,10 @@
 #pragma once
 
-#include "input.h"
-#include "logger.h"
-#include "window.h"
-
 #include <memory>
+
+#include "logger.h"
+#include "input.h"
+#include "render/window.h"
 
 namespace RealmEngine
 {
