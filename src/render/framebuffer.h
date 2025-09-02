@@ -38,8 +38,8 @@ namespace RealmEngine
         void bindFrameBuffer(FramebufferType type);
         void bindDefaultFrameBuffer() const;
 
-        void   bindTexture(AttachmentType attachment, int textureUnit);
-        GLuint getTexture(AttachmentType attachment);
+        void   bindAttachment(AttachmentType attachment, int textureUnit);
+        GLuint getAttachment(AttachmentType attachment);
 
         void resize(int newWidth, int newHeight);
 

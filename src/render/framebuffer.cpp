@@ -51,9 +51,9 @@ namespace RealmEngine
         glViewport(0, 0, m_width, m_height);
     }
 
-    void FramebufferManager::bindTexture(AttachmentType attachment, int textureUnit)
+    void FramebufferManager::bindAttachment(AttachmentType attachment, int textureUnit)
     {
-        GLuint texture = getTexture(attachment);
+        GLuint texture = getAttachment(attachment);
         if (texture != 0)
         {
             glActiveTexture(GL_TEXTURE0 + textureUnit);
@@ -61,7 +61,7 @@ namespace RealmEngine
         }
     }
 
-    GLuint FramebufferManager::getTexture(AttachmentType attachment)
+    GLuint FramebufferManager::getAttachment(AttachmentType attachment)
     {
         for (const auto& [type, data] : m_framebuffers)
         {
