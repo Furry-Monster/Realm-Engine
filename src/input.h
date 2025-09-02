@@ -4,7 +4,7 @@
 #include <GLFW/glfw3.h>
 #include <glad/gl.h>
 
-#include "resource/camera.h"
+#include "render/camera.h"
 #include "render/window.h"
 
 namespace RealmEngine

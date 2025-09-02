@@ -15,8 +15,8 @@
 #include <cmath>
 #include <cstring>
 
-#include "resource/camera.h"
-#include "resource/model.h"
+#include "render/camera.h"
+#include "render/model.h"
 #include "render/renderer.h"
 #include "render/shader.h"
 

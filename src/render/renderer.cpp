@@ -1,6 +1,6 @@
 #include "renderer.h"
 #include "engine_context.h"
-#include "resource/model.h"
+#include "model.h"
 #include "shader.h"
 
 namespace RealmEngine
