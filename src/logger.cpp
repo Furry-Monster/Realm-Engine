@@ -8,6 +8,8 @@
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
 
+#include "context.h"
+
 namespace RealmEngine
 {
     Logger::Logger()
@@ -27,10 +29,12 @@ namespace RealmEngine
                                                           spdlog::async_overflow_policy::block);
         m_logger->set_level(spdlog::level::trace);
         spdlog::register_logger(m_logger);
+
     }
 
     Logger::~Logger()
     {
+
         m_logger->flush();
         spdlog::drop_all();
     }

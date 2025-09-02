@@ -17,12 +17,12 @@ namespace RealmEngine
         ~Window();
 
         bool initialize();
+        void tick() { glfwPollEvents(); }
         void terminate();
 
         void setVisible(bool visible) { (m_visible = visible) ? glfwShowWindow(m_window) : glfwHideWindow(m_window); }
         bool shouldClose() { return glfwWindowShouldClose(m_window); }
         void swapBuffers() { glfwSwapBuffers(m_window); }
-        void pollEvents() { glfwPollEvents(); }
 
         GLFWwindow* getGLFWwindow() const { return m_window; }
         std::string getTitle() const { return m_title; }

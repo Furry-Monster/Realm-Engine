@@ -5,8 +5,6 @@ namespace RealmEngine
 {
     Input::Input(Camera* camera) : m_camera(camera) {}
 
-    Input::~Input() { m_camera = nullptr; }
-
     void Input::initialize()
     {
         g_context.m_window->registerOnCursorPosFunc([this](double xpos, double ypos) { mouseCallback(xpos, ypos); });
@@ -17,11 +15,20 @@ namespace RealmEngine
             [this](int key, int /*scancode*/, int action, int /*mods*/) { movementCallback(key, action); });
 
         glfwSetInputMode(g_context.m_window->getGLFWwindow(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
+        LOG_INFO("Input System initialized");
+    }
+
+    void Input::tick(float deltaTime) { m_delta_time = deltaTime; }
+
+    void Input::terminated()
+    {
+        LOG_INFO("Input System terminated");
+
+        m_camera = nullptr;
     }
 
     void Input::setCamera(Camera* camera) { m_camera = camera; }
-
-    void Input::setDeltaTime(float deltaTime) { m_delta_time = deltaTime; }
 
     void Input::mouseCallback(double xpos, double ypos)
     {

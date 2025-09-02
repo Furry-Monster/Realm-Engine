@@ -4,8 +4,8 @@
 #include <GLFW/glfw3.h>
 #include <glad/gl.h>
 
-#include "resource/camera.h"
 #include "render/window.h"
+#include "resource/camera.h"
 
 namespace RealmEngine
 {
@@ -13,11 +13,13 @@ namespace RealmEngine
     {
     public:
         explicit Input(Camera* camera = nullptr);
-        ~Input();
+        ~Input() = default;
 
         void initialize();
         void setCamera(Camera* camera);
-        void setDeltaTime(float deltaTime);
+        void terminated();
+
+        void tick(float deltaTime);
 
         bool isMouseCaptured() const { return m_mouse_captured; }
 

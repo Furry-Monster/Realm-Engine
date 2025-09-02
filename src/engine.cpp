@@ -57,8 +57,8 @@ namespace RealmEngine
     void Engine::logicalTick() const
     {
         // event handling
-        g_context.m_window->pollEvents();
-        g_context.m_input->setDeltaTime(m_delta_time);
+        g_context.m_window->tick();
+        g_context.m_input->tick(m_delta_time);
     }
 
     void Engine::renderTick()

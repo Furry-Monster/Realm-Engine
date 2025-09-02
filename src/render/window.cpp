@@ -1,4 +1,5 @@
 #include "window.h"
+#include "context.h"
 
 namespace RealmEngine
 {
@@ -13,6 +14,8 @@ namespace RealmEngine
         // init glfw
         if (!glfwInit())
         {
+            LOG_ERROR("Failed to initialize glfw in Window System");
+
             return false;
         }
 
@@ -26,6 +29,8 @@ namespace RealmEngine
         m_window = glfwCreateWindow(m_width, m_height, m_title.c_str(), nullptr, nullptr);
         if (!m_window)
         {
+            LOG_ERROR("Failed to create window in Window System");
+
             glfwTerminate();
             return false;
         }
@@ -35,6 +40,8 @@ namespace RealmEngine
         // init glad
         if (!gladLoadGL(glfwGetProcAddress))
         {
+            LOG_ERROR("Failed to initialize glad in Window System");
+
             glfwDestroyWindow(m_window);
             glfwTerminate();
             return false;
@@ -69,11 +76,15 @@ namespace RealmEngine
             glfwSetWindowTitle(m_window, window_title.c_str());
         }
 
+        LOG_INFO("Window System initialized");
+
         return true;
     }
 
     void Window::terminate()
     {
+        LOG_INFO("Window System terminated");
+
         if (m_window)
         {
             glfwDestroyWindow(m_window);
