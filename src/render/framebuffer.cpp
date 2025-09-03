@@ -6,12 +6,7 @@ namespace RealmEngine
 {
     bool FramebufferManager::initialize(int width, int height)
     {
-        m_width  = width;
-        m_height = height;
-
-        createGBuffer();
-        createShadowMaps();
-        createPostProcessBuffers();
+        resize(width, height);
 
         LOG_INFO("FramebufferManager initialized");
         return true;
@@ -67,23 +62,42 @@ namespace RealmEngine
         {
             auto it = data.attachments.find(attachment);
             if (it != data.attachments.end())
-            {
                 return it->second;
-            }
         }
         return 0;
     }
 
-    void FramebufferManager::resize(int newWidth, int newHeight)
+    void FramebufferManager::resize(int width, int height)
     {
-        if (m_width == newWidth && m_height == newHeight)
+        if (m_width == width && m_height == height)
             return;
 
-        terminate();
-        initialize(newWidth, newHeight);
+        // clean all framebuffers
+        for (auto& [type, data] : m_framebuffers)
+        {
+            if (data.fbo != 0)
+                glDeleteFramebuffers(1, &data.fbo);
+
+            for (auto& [attachment, texture] : data.attachments)
+            {
+                if (texture != 0)
+                    glDeleteTextures(1, &texture);
+            }
+        }
+
+        // set new width and height
+        m_width  = width;
+        m_height = height;
+
+        // re-create framebuffers we need
+        createGBuffer();
+        createShadowMaps();
+        createPostProcessBuffers();
+
+        m_framebuffers.clear();
     }
 
-    void FramebufferManager::clearFrameBuffer(FramebufferType type, bool color, bool depth)
+    void FramebufferManager::clearFrameBuffer(FramebufferType type, bool color, bool depth, bool stencil)
     {
         bindFrameBuffer(type);
 
@@ -92,6 +106,8 @@ namespace RealmEngine
             mask |= GL_COLOR_BUFFER_BIT;
         if (depth)
             mask |= GL_DEPTH_BUFFER_BIT;
+        if (stencil)
+            mask |= GL_STENCIL_BUFFER_BIT;
 
         if (mask != 0)
             glClear(mask);

@@ -41,9 +41,9 @@ namespace RealmEngine
         void   bindAttachment(AttachmentType attachment, int textureUnit);
         GLuint getAttachment(AttachmentType attachment);
 
-        void resize(int newWidth, int newHeight);
+        void resize(int width, int height);
 
-        void clearFrameBuffer(FramebufferType type, bool color = true, bool depth = true);
+        void clearFrameBuffer(FramebufferType type, bool color = true, bool depth = true, bool stencil = false);
 
     private:
         struct FramebufferData
