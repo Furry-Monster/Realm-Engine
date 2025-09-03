@@ -36,8 +36,8 @@ namespace RealmEngine
         m_state_mgr->initialize();
 
         // Get window size for framebuffer initialization
-        int width  = 1280; // TODO: Get from window
-        int height = 720;  // TODO: Get from window
+        int width  = g_context.m_window->getFramebufferWidth();
+        int height = g_context.m_window->getFramebufferHeight();
         m_framebuffer_mgr->initialize(width, height);
 
         if (m_mode == RenderMode::Defferd)
@@ -50,8 +50,6 @@ namespace RealmEngine
         }
 
         m_pipeline->initialize();
-
-        applyRendererState();
 
         m_initialized = true;
         LOG_INFO("Renderer initialized");
@@ -83,30 +81,6 @@ namespace RealmEngine
         }
     }
 
-    void Renderer::render(Model*           model,
-                          Shader*          shader,
-                          const glm::mat4& model_matrix,
-                          const glm::mat4& view_matrix,
-                          const glm::mat4& projection_matrix)
-    {
-        if (!model || !shader)
-            return;
-
-        shader->use();
-
-        shader->setMat4("projection", projection_matrix);
-        shader->setMat4("view", view_matrix);
-        shader->setMat4("model", model_matrix);
-
-        model->draw(shader->getShaderProgram());
-    }
-
-    void Renderer::clear(const glm::vec4& color)
-    {
-        glClearColor(color.r, color.g, color.b, color.a);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    }
-
     void Renderer::endFrame() const
     {
         if (!m_initialized)
@@ -114,58 +88,6 @@ namespace RealmEngine
             LOG_ERROR("Renderer not initialized");
             return;
         }
-    }
-
-    void Renderer::applyRendererState() const
-    {
-        if (m_state.enable_depth_test)
-        {
-            glEnable(GL_DEPTH_TEST);
-            glDepthFunc(GL_LESS);
-        }
-        else
-        {
-            glDisable(GL_DEPTH_TEST);
-        }
-
-        if (m_state.enable_culling)
-        {
-            glEnable(GL_CULL_FACE);
-            glCullFace(m_state.cull_face);
-            glFrontFace(GL_CCW);
-        }
-        else
-        {
-            glDisable(GL_CULL_FACE);
-        }
-
-        glfwSwapInterval(m_state.v_sync_interval);
-
-        if (m_state.enable_msaa)
-        {
-            glEnable(GL_MULTISAMPLE);
-        }
-        else
-        {
-            glDisable(GL_MULTISAMPLE);
-        }
-
-        glPolygonMode(GL_FRONT_AND_BACK, m_state.polygon_mode);
-        glLineWidth(m_state.line_width);
-        glPointSize(m_state.point_size);
-    }
-
-    void Renderer::setLighting(Shader*          shader,
-                               const glm::vec3& light_pos,
-                               const glm::vec3& light_color,
-                               const glm::vec3& view_pos)
-    {
-        if (!shader)
-            return;
-
-        shader->setVec3("lightPos", light_pos);
-        shader->setVec3("lightColor", light_color);
-        shader->setVec3("viewPos", view_pos);
     }
 
     void Renderer::addRenderObject(Model* model, const glm::mat4& model_matrix)
@@ -222,7 +144,6 @@ namespace RealmEngine
             return;
 
         beginFrame();
-        clear();
 
         m_pipeline->render();
 

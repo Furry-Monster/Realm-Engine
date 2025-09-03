@@ -66,60 +66,32 @@ namespace RealmEngine
 
         drawDebugUI();
 
-        // begin frame
-        g_context.m_renderer->beginFrame();
-        g_context.m_renderer->clear();
-
-        // apply rasterization state
-        g_context.m_renderer->applyRendererState();
-
-        // set matrices
+        // 设置相机矩阵
         glm::mat4 projection =
             m_camera->getProjectionMatrix(static_cast<float>(g_context.m_window->getFramebufferWidth()) /
                                           static_cast<float>(g_context.m_window->getFramebufferHeight()));
-        glm::mat4 view  = m_camera->getViewMatrix();
-        glm::mat4 model = glm::mat4(1.0f);
+        glm::mat4 view       = m_camera->getViewMatrix();
+        glm::vec3 camera_pos = m_camera->m_position;
 
-        // set lighting
-        glm::vec3 light_pos(1.2f, 1.0f, 2.0f);
-        glm::vec3 light_color(1.0f, 1.0f, 1.0f);
-        g_context.m_renderer->setLighting(m_shader, light_pos, light_color, m_camera->m_position);
+        g_context.m_renderer->setCamera(view, projection, camera_pos);
 
-        // render model
-        if (m_model)
-        {
-            g_context.m_renderer->render(m_model, m_shader, model, view, projection);
-        }
+        // 添加光源
+        g_context.m_renderer->addDirectionalLight(glm::vec3(0.2f, -1.0f, 0.3f), // 方向
+                                                  glm::vec3(1.0f, 0.9f, 0.8f),  // 颜色
+                                                  2.0f                          // 强度
+        );
 
-        // end frame
-        g_context.m_renderer->endFrame();
+        g_context.m_renderer->addPointLight(glm::vec3(2.0f, 3.0f, 1.0f), // 位置
+                                            glm::vec3(1.0f, 0.5f, 0.2f), // 颜色
+                                            5.0f                         // 强度
+        );
 
-        // // 设置相机矩阵
-        // glm::mat4 projection =
-        //     m_camera->getProjectionMatrix(static_cast<float>(g_context.m_window->getFramebufferWidth()) /
-        //                                   static_cast<float>(g_context.m_window->getFramebufferHeight()));
-        // glm::mat4 view       = m_camera->getViewMatrix();
-        // glm::vec3 camera_pos = m_camera->m_position;
+        // 添加模型
+        glm::mat4 model_matrix = glm::mat4(1.0f);
+        g_context.m_renderer->addRenderObject(m_model, model_matrix);
 
-        // m_renderer->setCamera(view, projection, camera_pos);
-
-        // // 添加光源
-        // m_renderer->addDirectionalLight(glm::vec3(0.2f, -1.0f, 0.3f), // 方向
-        //                                 glm::vec3(1.0f, 0.9f, 0.8f),  // 颜色
-        //                                 2.0f                          // 强度
-        // );
-
-        // m_renderer->addPointLight(glm::vec3(2.0f, 3.0f, 1.0f), // 位置
-        //                           glm::vec3(1.0f, 0.5f, 0.2f), // 颜色
-        //                           5.0f                         // 强度
-        // );
-
-        // // 添加模型
-        // glm::mat4 model_matrix = glm::mat4(1.0f);
-        // m_renderer->addRenderObject(m_model, model_matrix);
-
-        // // 渲染整帧
-        // m_renderer->renderFrame();
+        // 渲染整帧
+        g_context.m_renderer->renderFrame();
 
         // ui
         ImGui::Render();
@@ -141,90 +113,6 @@ namespace RealmEngine
                     g_context.m_window->getFramebufferWidth(),
                     g_context.m_window->getFramebufferHeight());
         ImGui::Text("OpenGL Version: %s", glfwGetVersionString());
-
-        ImGui::Separator();
-        ImGui::Text("Rasterization Controls:");
-
-        // renderer info
-        Renderer::State& renderer_state = g_context.m_renderer->getRendererState();
-
-        const char* polygon_modes[] = {"Fill", "Line", "Point"};
-        int         current_mode    = (renderer_state.polygon_mode == GL_FILL) ? 0 :
-                                      (renderer_state.polygon_mode == GL_LINE) ? 1 :
-                                                                                 2;
-        if (ImGui::Combo("Polygon Mode", &current_mode, polygon_modes, 3))
-        {
-            renderer_state.polygon_mode = (current_mode == 0) ? GL_FILL : (current_mode == 1) ? GL_LINE : GL_POINT;
-        }
-        ImGui::SliderFloat("Line Width", &renderer_state.line_width, 0.1f, 10.0f);
-        ImGui::SliderFloat("Point Size", &renderer_state.point_size, 1.0f, 20.0f);
-
-        ImGui::Checkbox("Enable Depth Test", &renderer_state.enable_depth_test);
-        ImGui::Checkbox("Enable Face Culling", &renderer_state.enable_culling);
-
-        if (renderer_state.enable_culling)
-        {
-            const char* cull_modes[] = {"Back", "Front", "Front and Back"};
-            int         current_cull = (renderer_state.cull_face == GL_BACK)  ? 0 :
-                                       (renderer_state.cull_face == GL_FRONT) ? 1 :
-                                                                                2;
-            if (ImGui::Combo("Cull Face", &current_cull, cull_modes, 3))
-            {
-                renderer_state.cull_face = (current_cull == 0) ? GL_BACK :
-                                           (current_cull == 1) ? GL_FRONT :
-                                                                 GL_FRONT_AND_BACK;
-            }
-        }
-
-        ImGui::SliderInt("V-Sync Interval", &renderer_state.v_sync_interval, 0, 2);
-        ImGui::Checkbox("Enable MSAA", &renderer_state.enable_msaa);
-
-        ImGui::Separator();
-        ImGui::Text("Camera Controls:");
-        ImGui::Text(
-            "Position: (%.2f, %.2f, %.2f)", m_camera->m_position.x, m_camera->m_position.y, m_camera->m_position.z);
-        ImGui::Text("Yaw: %.2f, Pitch: %.2f", m_camera->m_yaw, m_camera->m_pitch);
-        ImGui::SliderFloat("FOV", &m_camera->m_zoom, 1.0f, 45.0f);
-        ImGui::SliderFloat("Speed", &m_camera->m_movement_speed, 0.1f, 10.0f);
-        ImGui::Text("Mouse: %s (Tab to toggle)", g_context.m_input->isMouseCaptured() ? "Captured" : "Free");
-        ImGui::Text("Controls: WASD to move, Mouse to look, Scroll to zoom");
-
-        static char model_path[256] = "../assets/model/";
-        ImGui::InputText("Model Path", model_path, sizeof(model_path));
-        if (ImGui::Button("Load Model"))
-        {
-            delete m_model;
-
-            try
-            {
-                m_model = new Model(model_path);
-            }
-            catch (...)
-            {
-                m_model = nullptr;
-            }
-        }
-        ImGui::SameLine();
-        if (ImGui::Button("Clear Model"))
-        {
-            if (m_model)
-            {
-                delete m_model;
-                m_model = nullptr;
-            }
-        }
-
-        ImGui::Separator();
-        ImGui::Text("Model Info:");
-        if (m_model)
-        {
-            ImGui::Text("Meshes: %zu", m_model->m_meshes.size());
-            ImGui::Text("Textures: %zu", m_model->m_textures.size());
-        }
-        else
-        {
-            ImGui::Text("No model loaded");
-        }
         ImGui::End();
     }
 } // namespace RealmEngine

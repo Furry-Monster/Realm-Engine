@@ -25,7 +25,7 @@ namespace RealmEngine
         m_framebuffer_mgr->bindFrameBuffer(FramebufferType::PostProcess_A);
         m_framebuffer_mgr->clearFrameBuffer(FramebufferType::PostProcess_A);
 
-        StateManager::RenderState lighting_state;
+        StateManager::State lighting_state;
         lighting_state.enable_depth_test = false;
         lighting_state.enable_culling    = false;
         lighting_state.blending          = false;
