@@ -56,7 +56,6 @@ namespace RealmEngine
         void   applyRendererState() const;
         State& getRendererState() { return m_state; }
 
-        void setViewport(int width, int height) { glViewport(0, 0, width, height); }
         void setLighting(Shader*          shader,
                          const glm::vec3& light_pos,
                          const glm::vec3& light_color,

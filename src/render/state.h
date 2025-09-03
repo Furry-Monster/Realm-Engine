@@ -18,7 +18,7 @@ namespace RealmEngine
             GLenum polygon_mode = GL_FILL;
             float  line_width   = 1.0f;
             float  point_size   = 1.0f;
-            // Depth
+            // Depth Testing
             bool   enable_depth_test = true;
             GLenum depth_func        = GL_LESS;
             // Blending
@@ -37,16 +37,16 @@ namespace RealmEngine
         void initialize();
         void terminate();
 
-        GLuint getCurrentVAO() const { return m_binding_cache.current_vao; }
-        bool   isUBOBound(GLuint binding_point) const { return m_binding_cache.bound_ubos[binding_point] != 0; }
-        bool   isTextureBound(GLuint unit) const { return m_binding_cache.bound_textures[unit] != 0; }
+        GLuint getCurrentVAO() const { return m_binding.bound_vao; }
+        bool   isUBOBound(GLuint binding_point) const { return m_binding.bound_ubos[binding_point] != 0; }
+        bool   isTextureBound(GLuint unit) const { return m_binding.bound_textures[unit] != 0; }
 
         void pushState(const State& state);
         void popState();
         void applyState(const State& state);
 
         void bindTexture(int unit, GLuint texture, GLenum target = GL_TEXTURE_2D);
-        void bindUBO(GLuint buffer, int binding_point);
+        void bindUBO(GLuint ubo, int binding_point);
         void bindVAO(GLuint vao);
 
         void unbindAllTexture();
@@ -54,12 +54,18 @@ namespace RealmEngine
         void unbindVAO();
 
     private:
-        struct BindingCache
+        struct Binding
         {
-            GLuint                 current_vao {0};
+            GLuint                 bound_vao {0};
             std::array<GLuint, 32> bound_textures {0};
             std::array<GLuint, 16> bound_ubos {0};
-        } m_binding_cache;
+        } m_binding;
+
+        struct Limit
+        {
+            int texture_unit_max {0};
+            int uniform_buffer_max {0};
+        } m_limit;
 
         std::stack<State> m_state_stack;
         State             m_current_state;

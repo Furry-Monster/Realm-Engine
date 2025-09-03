@@ -6,8 +6,14 @@ namespace RealmEngine
 {
     void StateManager::initialize()
     {
+        // store default state
         m_current_state = State {};
         applyState(m_current_state);
+
+        // get limits for current OpenGL device
+        glGetIntegerv(GL_MAX_TEXTURE_UNITS, &m_limit.texture_unit_max);
+        glGetIntegerv(GL_MAX_UNIFORM_BUFFER_BINDINGS, &m_limit.uniform_buffer_max);
+
         LOG_INFO("StateManager initialized");
     }
 
@@ -17,6 +23,8 @@ namespace RealmEngine
             m_state_stack.pop();
 
         unbindAllTexture();
+        unbindAllUBOs();
+        unbindVAO();
 
         LOG_INFO("StateManager terminated");
     }
@@ -47,71 +55,101 @@ namespace RealmEngine
         applyMiscState(state);
     }
 
+    /**
+     * @brief bind GPU texture ptr(GLuint) on texture channel(int)
+     *
+     * @param channel texture channel in current framebuffer
+     * @param texture GPU allocated texture ptr
+     * @param target texture type , 2D or 1D or else
+     */
     void StateManager::bindTexture(int unit, GLuint texture, GLenum target)
     {
-        if (unit >= 0 && unit < static_cast<int>(m_binding_cache.bound_textures.size()))
+        if (unit > m_limit.texture_unit_max - 1)
         {
-            if (m_binding_cache.bound_textures[unit] != texture)
+            LOG_ERROR("Texture unit number out of range in current device!!!");
+            return;
+        }
+
+        if (unit >= 0 && unit < static_cast<int>(m_binding.bound_textures.size()))
+        {
+            if (m_binding.bound_textures[unit] != texture)
             {
                 glActiveTexture(GL_TEXTURE0 + unit);
                 glBindTexture(target, texture);
-                m_binding_cache.bound_textures[unit] = texture;
+                m_binding.bound_textures[unit] = texture;
             }
         }
     }
 
-    void StateManager::bindUBO(GLuint buffer, int binding_point)
+    /**
+     * @brief bind allocated ubo on shader binding point
+     *
+     * @param ubo created & allocated ubo ptr
+     * @param binding_point shader binding point pos
+     */
+    void StateManager::bindUBO(GLuint ubo, int binding_point)
     {
-        if (binding_point >= 0 && binding_point < static_cast<int>(m_binding_cache.bound_ubos.size()))
+        if (binding_point > m_limit.uniform_buffer_max - 1)
         {
-            if (m_binding_cache.bound_ubos[binding_point] != buffer)
+            LOG_ERROR("Binding point number out of range in current device!!!");
+            return;
+        }
+
+        if (binding_point >= 0 && binding_point < static_cast<int>(m_binding.bound_ubos.size()))
+        {
+            if (m_binding.bound_ubos[binding_point] != ubo)
             {
-                glBindBufferBase(GL_UNIFORM_BUFFER, binding_point, buffer);
-                m_binding_cache.bound_ubos[binding_point] = buffer;
+                glBindBufferBase(GL_UNIFORM_BUFFER, binding_point, ubo);
+                m_binding.bound_ubos[binding_point] = ubo;
             }
         }
     }
 
+    /**
+     * @brief use target vao
+     *
+     * @param vao
+     */
     void StateManager::bindVAO(GLuint vao)
     {
-        if (m_binding_cache.current_vao != vao)
+        if (m_binding.bound_vao != vao)
         {
             glBindVertexArray(vao);
-            m_binding_cache.current_vao = vao;
+            m_binding.bound_vao = vao;
         }
     }
 
     void StateManager::unbindAllTexture()
     {
-        for (int i = 0; i < static_cast<int>(m_binding_cache.bound_textures.size()); ++i)
+        for (int i = 0; i < static_cast<int>(m_binding.bound_textures.size()); ++i)
         {
-            if (m_binding_cache.bound_textures[i] != 0)
+            if (m_binding.bound_textures[i] != 0)
             {
                 glActiveTexture(GL_TEXTURE0 + i);
                 glBindTexture(GL_TEXTURE_2D, 0);
-                m_binding_cache.bound_textures[i] = 0;
+                m_binding.bound_textures[i] = 0;
             }
         }
     }
 
     void StateManager::unbindAllUBOs()
     {
-        for (int i = 0; i < static_cast<int>(m_binding_cache.bound_ubos.size()); ++i)
+        for (int i = 0; i < static_cast<int>(m_binding.bound_ubos.size()); ++i)
         {
-            if (m_binding_cache.bound_ubos[i] != 0)
+            if (m_binding.bound_ubos[i] != 0)
             {
                 glBindBufferBase(GL_UNIFORM_BUFFER, i, 0);
-                m_binding_cache.bound_ubos[i] = 0;
+                m_binding.bound_ubos[i] = 0;
             }
         }
     }
 
     void StateManager::unbindVAO()
     {
-        if (m_binding_cache.current_vao != 0)
+        if (m_binding.bound_vao != 0)
         {
             glBindVertexArray(0);
-            m_binding_cache.current_vao = 0;
+            m_binding.bound_vao = 0;
         }
     }
 
