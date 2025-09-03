@@ -25,7 +25,7 @@ namespace RealmEngine
         m_framebuffer_mgr->bindFrameBuffer(FramebufferType::GBuffer);
         m_framebuffer_mgr->clearFrameBuffer(FramebufferType::GBuffer);
 
-        StateManager::State gbuffer_state;
+        StateManager::RenderState gbuffer_state;
         gbuffer_state.enable_depth_test = true;
         gbuffer_state.depth_func        = GL_LESS;
         gbuffer_state.enable_culling    = true;
