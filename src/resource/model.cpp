@@ -10,7 +10,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
-#include "context.h"
+#include "global.h"
 
 namespace RealmEngine
 {

@@ -1,5 +1,5 @@
 #include "engine.h"
-#include "context.h"
+#include "global.h"
 
 namespace RealmEngine
 {
@@ -64,18 +64,15 @@ namespace RealmEngine
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        drawDebugUI();
-
-        // 设置相机矩阵
+        // render scene
         glm::mat4 projection =
             m_camera->getProjectionMatrix(static_cast<float>(g_context.m_window->getFramebufferWidth()) /
                                           static_cast<float>(g_context.m_window->getFramebufferHeight()));
         glm::mat4 view       = m_camera->getViewMatrix();
         glm::vec3 camera_pos = m_camera->m_position;
 
-        g_context.m_renderer->setCamera(view, projection, camera_pos);
+        g_context.m_renderer->setMainCamera(view, projection, camera_pos);
 
-        // 添加光源
         g_context.m_renderer->addDirectionalLight(glm::vec3(0.2f, -1.0f, 0.3f), // 方向
                                                   glm::vec3(1.0f, 0.9f, 0.8f),  // 颜色
                                                   2.0f                          // 强度
@@ -86,14 +83,13 @@ namespace RealmEngine
                                             5.0f                         // 强度
         );
 
-        // 添加模型
         glm::mat4 model_matrix = glm::mat4(1.0f);
         g_context.m_renderer->addRenderObject(m_model, model_matrix);
 
-        // 渲染整帧
         g_context.m_renderer->renderFrame();
 
-        // ui
+        // debug ui
+        drawDebugUI();
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 

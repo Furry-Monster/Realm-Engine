@@ -1,8 +1,7 @@
 #include "renderer.h"
-#include "context.h"
+#include "global.h"
 #include "render/framebuffer.h"
 #include "resource/model.h"
-#include "shader.h"
 
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
@@ -26,16 +25,13 @@ namespace RealmEngine
         ImGuiIO& io = ImGui::GetIO();
         io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
         io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
-
         ImGui_ImplGlfw_InitForOpenGL(g_context.m_window->getGLFWwindow(), GLFW_TRUE);
         ImGui_ImplOpenGL3_Init();
 
+        // initialize managers
         m_state_mgr       = std::make_unique<StateManager>();
         m_framebuffer_mgr = std::make_unique<FramebufferManager>();
-
         m_state_mgr->initialize();
-
-        // Get window size for framebuffer initialization
         int width  = g_context.m_window->getFramebufferWidth();
         int height = g_context.m_window->getFramebufferHeight();
         m_framebuffer_mgr->initialize(width, height);
@@ -126,7 +122,7 @@ namespace RealmEngine
         }
     }
 
-    void Renderer::setCamera(const glm::mat4& view, const glm::mat4& projection, const glm::vec3& position)
+    void Renderer::setMainCamera(const glm::mat4& view, const glm::mat4& projection, const glm::vec3& position)
     {
         if (m_mode == RenderMode::Defferd)
         {

@@ -1,6 +1,6 @@
 #include "framebuffer.h"
-#include "context.h"
-#include "logger.h"
+
+#include "global.h"
 
 namespace RealmEngine
 {

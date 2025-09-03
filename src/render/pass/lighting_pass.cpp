@@ -1,5 +1,5 @@
 #include "lighting_pass.h"
-#include "context.h"
+#include "global.h"
 #include "logger.h"
 #include "render/framebuffer.h"
 #include "render/shader.h"

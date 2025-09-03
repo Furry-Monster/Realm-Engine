@@ -1,5 +1,5 @@
 #include "state.h"
-#include "context.h"
+#include "global.h"
 #include "logger.h"
 
 namespace RealmEngine

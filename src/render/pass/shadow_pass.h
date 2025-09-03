@@ -1,8 +1,9 @@
 #pragma once
 
+#include <memory>
+
 #include "render/pass.h"
 #include "render/shader.h"
-#include <memory>
 
 namespace RealmEngine
 {
