@@ -47,8 +47,11 @@ namespace RealmEngine
         void setMovementSpeed(float speed) { m_movement_speed = speed; }
         void setMouseSensitivity(float sensitivity) { m_mouse_sensitivity = sensitivity; }
 
-        glm::mat4 getViewMatrix() const;
-        glm::mat4 getProjectionMatrix(float aspect) const;
+        glm::mat4 getViewMatrix() const { return glm::lookAt(m_position, m_position + m_front, m_up); }
+        glm::mat4 getProjectionMatrix(float aspect) const
+        {
+            return glm::perspective(glm::radians(m_fov), aspect, m_DEFAULT_NEAR, m_DEFAULT_FAR);
+        }
 
         void processKeyboard(Movement direction, float deltaTime);
         void processMouseMovement(float xoffset, float yoffset, bool constrainPitch = true);

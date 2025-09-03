@@ -16,10 +16,48 @@ namespace RealmEngine
 {
     unsigned int loadTextureFromFile(const char* path);
 
-    Mesh::Mesh(std::vector<Vertex> verts, std::vector<unsigned int> inds, std::vector<Texture> texs) :
-        m_verts(verts), m_inds(inds), m_texs(texs)
+    Mesh::Mesh(const std::vector<Vertex>&       verts,
+               const std::vector<unsigned int>& inds,
+               const std::vector<Texture>&      texs) : m_verts(verts), m_inds(inds), m_texs(texs)
     {
         setupMesh();
+    }
+
+    Mesh::Mesh(std::vector<Vertex>&& verts, std::vector<unsigned int>&& inds, std::vector<Texture>&& texs) :
+        m_verts(std::move(verts)), m_inds(std::move(inds)), m_texs(std::move(texs))
+    {
+        setupMesh();
+    }
+
+    Mesh::~Mesh() { cleanup(); }
+
+    Mesh::Mesh(Mesh&& other) noexcept :
+        m_verts(std::move(other.m_verts)), m_inds(std::move(other.m_inds)), m_texs(std::move(other.m_texs)),
+        m_vao_id(other.m_vao_id), m_vbo_id(other.m_vbo_id), m_ebo_id(other.m_ebo_id)
+    {
+        other.m_vao_id = 0;
+        other.m_vbo_id = 0;
+        other.m_ebo_id = 0;
+    }
+
+    Mesh& Mesh::operator=(Mesh&& other) noexcept
+    {
+        if (this != &other)
+        {
+            cleanup();
+
+            m_verts  = std::move(other.m_verts);
+            m_inds   = std::move(other.m_inds);
+            m_texs   = std::move(other.m_texs);
+            m_vao_id = other.m_vao_id;
+            m_vbo_id = other.m_vbo_id;
+            m_ebo_id = other.m_ebo_id;
+
+            other.m_vao_id = 0;
+            other.m_vbo_id = 0;
+            other.m_ebo_id = 0;
+        }
+        return *this;
     }
 
     void Mesh::setupMesh()
@@ -50,7 +88,7 @@ namespace RealmEngine
         glBindVertexArray(0);
     }
 
-    void Mesh::draw(unsigned int shader_program)
+    void Mesh::draw(unsigned int shader_program) const
     {
         unsigned int diffuse_nr {1};
         unsigned int normal_nr {1};
@@ -80,6 +118,25 @@ namespace RealmEngine
         glBindVertexArray(m_vao_id);
         glDrawElements(GL_TRIANGLES, m_inds.size(), GL_UNSIGNED_INT, nullptr);
         glBindVertexArray(0);
+    }
+
+    void Mesh::cleanup()
+    {
+        if (m_vao_id != 0)
+        {
+            glDeleteVertexArrays(1, &m_vao_id);
+            m_vao_id = 0;
+        }
+        if (m_vbo_id != 0)
+        {
+            glDeleteBuffers(1, &m_vbo_id);
+            m_vbo_id = 0;
+        }
+        if (m_ebo_id != 0)
+        {
+            glDeleteBuffers(1, &m_ebo_id);
+            m_ebo_id = 0;
+        }
     }
 
     Model::Model() = default;
@@ -172,7 +229,7 @@ namespace RealmEngine
         std::vector<Texture> specular_maps = loadMaterialTextures(material, aiTextureType_SPECULAR);
         textures.insert(textures.end(), specular_maps.begin(), specular_maps.end());
 
-        return Mesh(vertices, indices, textures);
+        return Mesh(std::move(vertices), std::move(indices), std::move(textures));
     }
 
     std::vector<Texture> Model::loadMaterialTextures(aiMaterial* ai_mat, aiTextureType ai_type)
@@ -217,10 +274,18 @@ namespace RealmEngine
         return textures;
     }
 
-    void Model::draw(unsigned int shader_program)
+    void Model::draw(unsigned int shader_program) const
     {
-        for (auto& m_mesh : m_meshes)
-            m_mesh.draw(shader_program);
+        for (const auto& mesh : m_meshes)
+            mesh.draw(shader_program);
+    }
+
+    bool Model::loadFromFile(const std::string& path)
+    {
+        m_meshes.clear();
+        m_textures.clear();
+        loadModel(path);
+        return !m_meshes.empty();
     }
 
     unsigned int loadTextureFromFile(const char* path)

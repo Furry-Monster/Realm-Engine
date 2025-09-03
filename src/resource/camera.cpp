@@ -9,13 +9,6 @@ namespace RealmEngine
         updateCameraVecs();
     }
 
-    glm::mat4 Camera::getViewMatrix() const { return glm::lookAt(m_position, m_position + m_front, m_up); }
-
-    glm::mat4 Camera::getProjectionMatrix(float aspect) const
-    {
-        return glm::perspective(glm::radians(m_fov), aspect, m_DEFAULT_NEAR, m_DEFAULT_FAR);
-    }
-
     void Camera::processKeyboard(Camera::Movement direction, float deltaTime)
     {
         float velocity = m_movement_speed * deltaTime;
