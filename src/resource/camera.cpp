@@ -2,14 +2,10 @@
 
 namespace RealmEngine
 {
-    Camera::Camera(glm::vec3 position, glm::vec3 up, float yaw, float pitch) :
-        m_front(glm::vec3(0.0f, 0.0f, -1.0f)), m_movement_speed(g_camera_info.speed),
-        m_mouse_sensitivity(g_camera_info.sensitivity), m_zoom(g_camera_info.zoom)
+    Camera::Camera(const glm::vec3& position, const glm::vec3& up, float yaw, float pitch) :
+        m_position(position), m_world_up(up), m_yaw(yaw), m_pitch(pitch), m_front(glm::vec3(0.0f, 0.0f, -1.0f)),
+        m_fov(m_DEFAULT_FOV), m_movement_speed(m_DEFAULT_SPEED), m_mouse_sensitivity(m_DEFAULT_SENSITIVITY)
     {
-        m_position = position;
-        m_world_up = up;
-        m_yaw      = yaw;
-        m_pitch    = pitch;
         updateCameraVecs();
     }
 
@@ -17,7 +13,7 @@ namespace RealmEngine
 
     glm::mat4 Camera::getProjectionMatrix(float aspect) const
     {
-        return glm::perspective(glm::radians(m_zoom), aspect, 0.1f, 100.0f);
+        return glm::perspective(glm::radians(m_fov), aspect, m_DEFAULT_NEAR, m_DEFAULT_FAR);
     }
 
     void Camera::processKeyboard(Camera::Movement direction, float deltaTime)
@@ -54,11 +50,11 @@ namespace RealmEngine
 
     void Camera::processMouseScroll(float yoffset)
     {
-        m_zoom -= yoffset;
-        if (m_zoom < 1.0f)
-            m_zoom = 1.0f;
-        if (m_zoom > 45.0f)
-            m_zoom = 45.0f;
+        m_fov -= yoffset;
+        if (m_fov < 1.0f)
+            m_fov = 1.0f;
+        if (m_fov > 45.0f)
+            m_fov = 45.0f;
     }
 
     void Camera::updateCameraVecs()

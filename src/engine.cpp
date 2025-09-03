@@ -69,7 +69,7 @@ namespace RealmEngine
             m_camera->getProjectionMatrix(static_cast<float>(g_context.m_window->getFramebufferWidth()) /
                                           static_cast<float>(g_context.m_window->getFramebufferHeight()));
         glm::mat4 view       = m_camera->getViewMatrix();
-        glm::vec3 camera_pos = m_camera->m_position;
+        glm::vec3 camera_pos = m_camera->getPosition();
 
         g_context.m_renderer->setMainCamera(view, projection, camera_pos);
 
