@@ -8,8 +8,6 @@
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
 
-#include "global.h"
-
 namespace RealmEngine
 {
     Logger::Logger()

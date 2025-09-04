@@ -6,6 +6,8 @@
 
 #include <spdlog/logger.h>
 
+#include "global.h"
+
 namespace RealmEngine
 {
 
