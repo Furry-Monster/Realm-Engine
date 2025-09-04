@@ -66,13 +66,13 @@ namespace RealmEngine
     class Model
     {
     public:
-        Model();
-        explicit Model(const std::string& path);
+        Model() = default;
+        explicit Model(const std::string& path) { loadModel(path); };
         ~Model() = default;
 
-        Model(const Model&)            = delete;
+        Model(const Model&)            = delete; // copy construct not allowed
         Model& operator=(const Model&) = delete;
-        Model(Model&&)                 = default;
+        Model(Model&&)                 = default; // move construct allowed
         Model& operator=(Model&&)      = default;
 
         void draw(unsigned int shader_program) const;

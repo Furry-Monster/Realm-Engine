@@ -139,16 +139,14 @@ namespace RealmEngine
         }
     }
 
-    Model::Model() = default;
-
-    Model::Model(const std::string& path) { loadModel(path); }
-
     void Model::loadModel(const std::string& path)
     {
+        // load the whole scene
         Assimp::Importer importer;
         const aiScene*   scene =
             importer.ReadFile(path, aiProcess_Triangulate | aiProcess_CalcTangentSpace | aiProcess_GenNormals);
 
+        // pre-process
         if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
         {
             LOG_ERROR("ERROR::ASSIMP::", importer.GetErrorString());
@@ -187,11 +185,13 @@ namespace RealmEngine
         glm::vec2 vec2;
         for (unsigned int i = 0; i < ai_mesh->mNumVertices; i++)
         {
+            // load pos
             vec3.x          = ai_mesh->mVertices[i].x;
             vec3.y          = ai_mesh->mVertices[i].y;
             vec3.z          = ai_mesh->mVertices[i].z;
             vertex.position = vec3;
 
+            // load normal
             if (ai_mesh->HasNormals())
             {
                 vec3.x        = ai_mesh->mNormals[i].x;
@@ -200,6 +200,7 @@ namespace RealmEngine
                 vertex.normal = vec3;
             }
 
+            // load uv
             if (ai_mesh->mTextureCoords[0])
             {
                 vec2.x            = ai_mesh->mTextureCoords[0][i].x;
@@ -212,6 +213,7 @@ namespace RealmEngine
             vertices.push_back(vertex);
         }
 
+        // load ind for each face
         aiFace face;
         for (unsigned int i = 0; i < ai_mesh->mNumFaces; i++)
         {
@@ -220,6 +222,7 @@ namespace RealmEngine
                 indices.push_back(face.mIndices[j]);
         }
 
+        // load texture
         std::vector<Texture> textures;
         aiMaterial*          material     = ai_scene->mMaterials[ai_mesh->mMaterialIndex];
         std::vector<Texture> diffuse_maps = loadMaterialTextures(material, aiTextureType_DIFFUSE);
