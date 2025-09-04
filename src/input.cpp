@@ -21,7 +21,7 @@ namespace RealmEngine
 
     void Input::tick(float deltaTime) { m_delta_time = deltaTime; }
 
-    void Input::terminated()
+    void Input::terminate()
     {
         LOG_INFO("Input System terminated");
 

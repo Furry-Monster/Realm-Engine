@@ -1,4 +1,5 @@
 #include "global.h"
+#include <memory>
 
 namespace RealmEngine
 {
@@ -9,11 +10,11 @@ namespace RealmEngine
 
         // initialize window system
         m_window = std::make_shared<Window>(640, 480, "RealmEngine");
-        if (!m_window->initialize())
-        {
-            m_window.reset();
-            return;
-        }
+        m_window->initialize();
+
+        // initialize resource manager
+        m_resource = std::make_shared<Resource>();
+        m_resource->initialize();
 
         // initialize rendering system
         m_renderer = std::make_shared<Renderer>();
@@ -26,10 +27,15 @@ namespace RealmEngine
 
     void Context::destroy()
     {
+        m_input->terminate();
+        m_resource->terminate();
+        m_renderer->terminate();
+        m_window->terminate();
 
         // reset ptrs
         m_input.reset();
         m_renderer.reset();
+        m_resource.reset();
         m_window.reset();
         m_logger.reset();
     }

@@ -7,8 +7,6 @@ namespace RealmEngine
         m_width(width), m_height(height), m_title(title)
     {}
 
-    Window::~Window() { terminate(); }
-
     bool Window::initialize()
     {
         // init glfw

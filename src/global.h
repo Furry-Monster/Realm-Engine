@@ -6,6 +6,7 @@
 #include "logger.h"
 #include "render/renderer.h"
 #include "render/window.h"
+#include "resource/resource.h"
 
 namespace RealmEngine
 {
@@ -13,6 +14,7 @@ namespace RealmEngine
     class Input;
     class Window;
     class Renderer;
+    class ResourceManager;
 
     class Context
     {
@@ -21,9 +23,10 @@ namespace RealmEngine
         void destroy();
 
         std::shared_ptr<Logger>   m_logger;
-        std::shared_ptr<Input>    m_input;
         std::shared_ptr<Window>   m_window;
+        std::shared_ptr<Resource> m_resource;
         std::shared_ptr<Renderer> m_renderer;
+        std::shared_ptr<Input>    m_input;
     };
 
     extern Context g_context;

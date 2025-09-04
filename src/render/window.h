@@ -14,7 +14,7 @@ namespace RealmEngine
     {
     public:
         Window(int width, int height, const char* title);
-        ~Window();
+        ~Window() = default;
 
         bool initialize();
         void tick() { glfwPollEvents(); }

@@ -17,7 +17,7 @@ namespace RealmEngine
 
         void initialize();
         void setCamera(Camera* camera);
-        void terminated();
+        void terminate();
 
         void tick(float deltaTime);
 

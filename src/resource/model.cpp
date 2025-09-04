@@ -1,4 +1,5 @@
 #include "model.h"
+#include <string>
 
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
@@ -92,6 +93,7 @@ namespace RealmEngine
     {
         unsigned int diffuse_nr {1};
         unsigned int normal_nr {1};
+        unsigned int specular_nr {1};
 
         for (unsigned int i = 0; i < m_texs.size(); i++)
         {
@@ -108,6 +110,11 @@ namespace RealmEngine
             {
                 name   = "texture_normal";
                 number = std::to_string(normal_nr++);
+            }
+            else if (m_texs[i].type == Texture::Type::Specular)
+            {
+                name   = "texture_specular";
+                number = std::to_string(specular_nr++);
             }
 
             std::string uniform_name = name + number;
