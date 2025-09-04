@@ -1,5 +1,4 @@
 #include "framebuffer.h"
-
 #include "global.h"
 
 namespace RealmEngine

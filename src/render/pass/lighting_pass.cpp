@@ -2,7 +2,7 @@
 #include "global.h"
 #include "logger.h"
 #include "render/framebuffer.h"
-#include "render/shader.h"
+#include "resource/shader.h"
 #include "render/state.h"
 
 namespace RealmEngine

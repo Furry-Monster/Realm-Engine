@@ -16,7 +16,7 @@
 #include <cstring>
 
 #include "render/renderer.h"
-#include "render/shader.h"
+#include "resource/shader.h"
 #include "resource/camera.h"
 #include "resource/model.h"
 

@@ -1,11 +1,11 @@
 #pragma once
 
+#include "resource/resource.h"
 #include <assimp/material.h>
 #include <assimp/scene.h>
 
 #include <glm/glm.hpp>
 
-#include <cstdint>
 #include <string>
 #include <vector>
 
@@ -17,20 +17,6 @@ namespace RealmEngine
         glm::vec3 position;
         glm::vec3 normal;
         glm::vec2 tex_coords;
-    };
-
-    struct Texture
-    {
-        enum class Type : uint8_t
-        {
-            Diffuse,
-            Normal,
-            Specular,
-        };
-
-        unsigned int id;
-        Type         type;
-        std::string  path;
     };
 
     class Mesh
